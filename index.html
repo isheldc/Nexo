@@ -1,3 +1,4 @@
+INDEX
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -10,796 +11,754 @@
     <meta property="og:type" content="website">
     <meta name="theme-color" content="#081426">
     <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="./manifest.json">
 </head>
 <body>
 
-    <!-- MODAL DE CONFIGURACIÓN DE IA NUBE -->
-    <div id="modal-config" class="modal hidden">
-        <div class="modal-box">
-            <div class="flex-between">
-                <h3>🚀 Potencia de IA Nube</h3>
-                <button class="btn-close" onclick="toggleModalConfig()" aria-label="Cerrar modal">✕</button>
+<!-- MODAL DE TALLER DE ENSAMBLAJE DE CIRCUITOS -->
+<div id="modal-builder-circuito" class="modal hidden">
+    <div class="modal-box circuit-modal-exact" style="max-width: 960px !important; width: 96% !important;">
+        <div class="flex-between" style="border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 14px;">
+            <div>
+                <h3 style="font-size: 20px; display:flex; align-items:center; gap:8px;">
+                    <span>🔌</span> Taller de Ensamblaje: Circuito Eléctrico y Ley de Ohm
+                </h3>
+                <small style="color:var(--cyan); font-weight:700;">Arrastra los componentes desde la barra lateral o haz clic en ellos para colocarlos</small>
             </div>
-            <p>Por defecto Nexora LAB funciona <b>100% Offline con IA Local Autónoma</b>. Si deseas conectar modelos en la nube de Google Gemini para explicaciones extendidas, ingresa tu API Key opcional:</p>
-            <input type="password" id="input-gemini-key" placeholder="AIzaSy... (Opcional)">
-            <div class="btn-group-right">
-                <button class="secondary-btn" onclick="guardarClaveIA('')">Usar IA Local</button>
-                <button class="primary-btn" onclick="guardarClaveIA(document.getElementById('input-gemini-key').value)">Guardar y Conectar</button>
+            <button class="btn-close" onclick="cerrarConstructorCircuito()" aria-label="Cerrar taller">✕</button>
+        </div>
+
+        <!-- CONTENEDOR PRINCIPAL EN 2 COLUMNAS -->
+        <div class="circuit-workbench-grid" style="display: grid !important; grid-template-columns: 1fr 270px !important; gap: 18px !important; align-items: start !important;">
+
+            <!-- ÁREA DEL CIRCUITO ESQUEMÁTICO -->
+            <div class="circuit-schematic-wrapper" style="display: flex; flex-direction: column;">
+                <!-- ENCABEZADO DE DATOS TÉCNICOS -->
+                <div class="circuit-quick-specs">
+                    <span>🔋 Voltaje: <b>35V</b></span>
+                    <span>⚡ Resistencia: <b>10 Ω</b></span>
+                    <span>💡 Ley de Ohm: <b>I = V / R = 3.50 A</b></span>
+                    <button class="secondary-btn" style="padding:4px 10px; font-size:12px; margin-left:auto; border-color:var(--cyan); color:var(--cyan);" onclick="ensamblarCircuitoCompleto()">
+                        ⚡ Auto-armar Todo
+                    </button>
+                </div>
+
+                <!-- TABLERO NEGRO DEL CIRCUITO -->
+                <div class="circuit-canvas-black" id="circuitBoardExact" style="position: relative; background: #000000 !important; border: 2px solid #1a2636; border-radius: 16px; height: 350px; width: 100%; overflow: hidden;">
+                    <!-- Bucle de cable -->
+                    <div class="circuit-wire-loop" style="position: absolute; top: 55px; left: 70px; right: 70px; bottom: 55px; border: 3px dashed rgba(0, 229, 255, 0.45); border-radius: 6px; pointer-events: none; z-index: 1;"></div>
+
+                    <!-- 1. Batería (Izquierda) -->
+                    <div class="slot-target slot-pos-battery" id="slot-bateria"
+                         ondragover="handleCircuitDragOver(event)" ondragleave="handleCircuitDragLeave(event)"
+                         ondrop="handleCircuitDrop(event, 'bateria')" onclick="handleSlotClick('bateria')"
+                         style="position: absolute; top: 50%; left: 25px; transform: translateY(-50%); width: 80px; height: 90px; display: flex; align-items: center; justify-content: center; z-index: 5; cursor: pointer;">
+                        <div class="slot-dashed-box" id="outline-bateria" style="border: 2px dashed rgba(0, 229, 255, 0.45); border-radius: 8px; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(10, 20, 35, 0.6); text-align: center;">
+                            <span class="dashed-text" style="font-size: 12px; font-weight: 900; color: #f59e0b;">35V</span>
+                            <span class="dashed-sub" style="font-size: 10px; color: #94a3b8;">Batería</span>
+                        </div>
+                        <div class="placed-battery-block hidden" id="placed-bateria" style="display: flex; align-items: center; gap: 6px;">
+                            <div class="battery-label-side" style="color: #fff; font-weight: 900; font-size: 12px;">35V</div>
+                            <div class="battery-orange-body" style="width: 20px; height: 60px; background: #f59e0b; border: 1px solid #d97706; border-radius: 2px;"></div>
+                        </div>
+                    </div>
+
+                    <!-- 2. Interruptor (Arriba) -->
+                    <div class="slot-target slot-pos-switch" id="slot-switch"
+                         ondragover="handleCircuitDragOver(event)" ondragleave="handleCircuitDragLeave(event)"
+                         ondrop="handleCircuitDrop(event, 'switch')" onclick="handleSlotClick('switch')"
+                         style="position: absolute; top: 25px; left: 50%; transform: translateX(-50%); width: 120px; height: 40px; display: flex; align-items: center; justify-content: center; z-index: 5; cursor: pointer;">
+                        <div class="slot-dashed-box" id="outline-switch" style="border: 2px dashed rgba(0, 229, 255, 0.45); border-radius: 8px; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: rgba(10, 20, 35, 0.6);">
+                            <span class="dashed-sub" style="font-size: 10px; color: #94a3b8;">Interruptor</span>
+                        </div>
+                        <div class="placed-switch-block hidden" id="placed-switch" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+                            <div class="switch-outer-track" style="width: 80px; height: 16px; background: #111827; border: 2px solid #000; border-radius: 3px; display: flex; align-items: center; padding: 0 2px;">
+                                <div class="switch-green-slider" style="width: 100%; height: 6px; background: #10b981; border-radius: 2px;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. Resistencia (Derecha) -->
+                    <div class="slot-target slot-pos-resistor" id="slot-resistencia"
+                         ondragover="handleCircuitDragOver(event)" ondragleave="handleCircuitDragLeave(event)"
+                         ondrop="handleCircuitDrop(event, 'resistencia')" onclick="handleSlotClick('resistencia')"
+                         style="position: absolute; top: 50%; right: 25px; transform: translateY(-50%); width: 75px; height: 90px; display: flex; align-items: center; justify-content: center; z-index: 5; cursor: pointer;">
+                        <div class="slot-dashed-box" id="outline-resistencia" style="border: 2px dashed rgba(0, 229, 255, 0.45); border-radius: 8px; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(10, 20, 35, 0.6); text-align: center;">
+                            <span class="dashed-text" style="font-size: 12px; font-weight: 900; color: #f59e0b;">10 Ω</span>
+                            <span class="dashed-sub" style="font-size: 10px; color: #94a3b8;">Resistencia</span>
+                        </div>
+                        <div class="placed-resistor-block hidden" id="placed-resistencia" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">
+                            <svg width="24" height="48" viewBox="0 0 32 60" style="display: block; filter: drop-shadow(0 0 6px rgba(168, 85, 247, 0.7));">
+                                <path d="M16,0 L16,10 L30,22 L2,38 L30,50 L16,56 L16,60" fill="none" stroke="#a855f7" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- 4. Bombilla (Abajo) -->
+                    <div class="slot-target slot-pos-bulb" id="slot-bombilla"
+                         ondragover="handleCircuitDragOver(event)" ondragleave="handleCircuitDragLeave(event)"
+                         ondrop="handleCircuitDrop(event, 'bombilla')" onclick="handleSlotClick('bombilla')"
+                         style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90px; height: 55px; display: flex; align-items: center; justify-content: center; z-index: 5; cursor: pointer;">
+                        <div class="slot-dashed-box" id="outline-bombilla" style="border: 2px dashed rgba(0, 229, 255, 0.45); border-radius: 8px; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: rgba(10, 20, 35, 0.6);">
+                            <span class="dashed-sub" style="font-size: 10px; color: #94a3b8;">Bombilla</span>
+                        </div>
+                        <div class="placed-bulb-block hidden" id="placed-bombilla" style="display: flex; align-items: center; justify-content: center;">
+                            <div class="bulb-yellow-circle" style="width: 42px; height: 42px; border-radius: 50%; background: #facc15; display: flex; align-items: center; justify-content: center;">
+                                <div class="bulb-inner-arc" style="width: 18px; height: 18px; border: 2px solid #fff; border-bottom-color: transparent; border-left-color: transparent; border-radius: 50%; transform: rotate(45deg);"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TARJETA DE ÉXITO -->
+                <div id="circuit-success-box" class="circuit-completion-success-bar hidden" style="margin-top: 14px; background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; border-radius: 12px; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between;">
+                    <div class="success-message">
+                        <strong>⚡ ¡Circuito Armado y Energizado con Éxito!</strong>
+                        <p style="font-size: 13px; margin-top: 2px;">Corriente eléctrica fluyendo: <b>I = V / R = 35V / 10Ω = 3.50 Amperes</b>.</p>
+                    </div>
+                    <button class="primary-btn pulse-glow-btn" onclick="completarConstruccionCircuito()">
+                        Continuar →
+                    </button>
+                </div>
             </div>
+
+            <!-- BARRA LATERAL DE COMPONENTES -->
+            <aside class="circuit-components-sidebar" style="background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 16px;">
+                <div class="sidebar-shelf-header">
+                    <h4>📦 Componentes</h4>
+                    <small style="color: var(--muted); font-size: 11px;">Toca o arrastra:</small>
+                </div>
+
+                <div class="components-shelf-list" style="display: flex; flex-direction: column; gap: 9px; margin-top: 12px;">
+                    <!-- 1. Batería -->
+                    <div class="shelf-component-card" id="drag-comp-bateria" draggable="true" ondragstart="handleCircuitDragStart(event, 'bateria')" onclick="seleccionarComponente('bateria')" style="background: var(--panel-light); border: 1px solid var(--border); border-radius: 10px; padding: 10px; display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                        <div style="background: #f59e0b; color: #fff; font-size: 9px; font-weight: 900; width: 18px; height: 30px; border-radius: 2px; display: flex; align-items: center; justify-content: center;">35V</div>
+                        <div>
+                            <strong style="font-size: 12px; display: block;">Batería</strong>
+                            <small style="font-size: 10px; color: var(--muted);">35V DC</small>
+                        </div>
+                    </div>
+
+                    <!-- 2. Interruptor -->
+                    <div class="shelf-component-card" id="drag-comp-switch" draggable="true" ondragstart="handleCircuitDragStart(event, 'switch')" onclick="seleccionarComponente('switch')" style="background: var(--panel-light); border: 1px solid var(--border); border-radius: 10px; padding: 10px; display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                        <div style="width: 26px; height: 8px; background: #111827; border: 1px solid #374151; border-radius: 2px;"></div>
+                        <div>
+                            <strong style="font-size: 12px; display: block;">Interruptor</strong>
+                            <small style="font-size: 10px; color: var(--muted);">Conmutador</small>
+                        </div>
+                    </div>
+
+                    <!-- 3. Resistencia -->
+                    <div class="shelf-component-card" id="drag-comp-resistencia" draggable="true" ondragstart="handleCircuitDragStart(event, 'resistencia')" onclick="seleccionarComponente('resistencia')" style="background: var(--panel-light); border: 1px solid var(--border); border-radius: 10px; padding: 10px; display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                        <svg width="14" height="28" viewBox="0 0 24 45"><path d="M12,0 L12,6 L22,16 L2,28 L22,38 L12,42 L12,45" fill="none" stroke="#a855f7" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        <div>
+                            <strong style="font-size: 12px; display: block;">Resistencia</strong>
+                            <small style="font-size: 10px; color: var(--muted);">10 Ω</small>
+                        </div>
+                    </div>
+
+                    <!-- 4. Bombilla -->
+                    <div class="shelf-component-card" id="drag-comp-bombilla" draggable="true" ondragstart="handleCircuitDragStart(event, 'bombilla')" onclick="seleccionarComponente('bombilla')" style="background: var(--panel-light); border: 1px solid var(--border); border-radius: 10px; padding: 10px; display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                        <div style="width: 20px; height: 20px; background: #facc15; border-radius: 50%;"></div>
+                        <div>
+                            <strong style="font-size: 12px; display: block;">Bombilla</strong>
+                            <small style="font-size: 10px; color: var(--muted);">Carga lumínica</small>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
         </div>
     </div>
+</div>
 
-    <!-- PANTALLA 1: INICIO DE SESIÓN -->
+    <!-- 1. PANTALLA DE INICIO DE SESIÓN -->
     <div id="loginScreen" class="login-screen">
         <div class="login-card">
-            <div class="logo">🧬</div>
+            <div class="logo">🧪</div>
             <h1>NEXORA <span>LAB</span></h1>
-            <p>Laboratorio Científico Virtual Escolar</p>
+            <p>La ciencia está en tus manos</p>
+
             <form id="loginForm">
-                <label for="studentName">Nombre del Estudiante:</label>
-                <input type="text" id="studentName" placeholder="Ej. Citlali / David" required autocomplete="name">
-                <button type="submit" class="primary-btn btn-full">Comenzar Aventura Científica 🚀</button>
+                <label for="studentName">Nombre del estudiante</label>
+                <input id="studentName" type="text"
+                       placeholder="Escribe tu nombre" autocomplete="name" required>
+
+                <label for="studentPassword">Contraseña de demostración</label>
+                <input id="studentPassword" type="password"
+                       placeholder="Mínimo 4 caracteres" minlength="4" required>
+
+                <button type="submit" class="primary-btn">
+                    Entrar al laboratorio 🚀
+                </button>
             </form>
+
+            <small>Versión demostrativa para estudiantes</small>
         </div>
     </div>
 
-    <!-- PANTALLA 2: SELECCIÓN DE NIVEL ESCOLAR (SECUNDARIA O PREPARATORIA) -->
+    <!-- 2. PANTALLA DE SELECCIÓN DE NIVEL ESCOLAR (JUSTO DESPUÉS DEL LOGIN CON BOTÓN DE REGRESO) -->
     <div id="levelScreen" class="login-screen hidden">
-        <div class="login-card level-card">
+        <div class="login-card level-card-wrapper" style="max-width: 580px;">
             <div class="logo">🎓</div>
-            <h2>¡Hola, <span id="welcomeStudentName" class="gradient-text">Científico</span>!</h2>
-            <p>Selecciona tu nivel educativo para calibrar los simuladores y el rigor del método científico:</p>
-            
-            <div class="level-selection-grid">
-                <button type="button" class="level-btn" onclick="elegirNivelPrincipal('Secundaria')">
-                    <span class="level-icon">🔬</span>
-                    <div class="level-info">
-                        <strong>Secundaria</strong>
-                        <small>Ciencias fundamentales, simuladores visuales y leyes iniciales.</small>
-                    </div>
-                </button>
+            <h1>Elige tu <span>Nivel Escolar</span></h1>
+            <p>¡Bienvenido, <b id="levelStudentName" style="color:var(--cyan);">Estudiante</b>! Selecciona tu nivel para adaptar las 18 misiones y simuladores a tu grado académico:</p>
 
-                <button type="button" class="level-btn" onclick="elegirNivelPrincipal('Preparatoria')">
-                    <span class="level-icon">⚛️</span>
+            <div class="grid-levels" style="margin: 22px 0; text-align: left;">
+                <!-- Opción Secundaria -->
+                <div class="level-card" onclick="elegirNivelPrincipal('Secundaria')">
+                    <div class="level-icon">🚀</div>
                     <div class="level-info">
-                        <strong>Preparatoria / Bachillerato</strong>
-                        <small>Fórmulas cuantitativas, circuitos avanzados y análisis empírico.</small>
+                        <h3>Secundaria (12 - 15 años)</h3>
+                        <p>Fuerzas, péndulos, circuitos en serie, escala de pH, densidades, fotosíntesis y células con controles visuales guiados.</p>
                     </div>
-                </button>
+                    <span class="badge-level">Principiante / Intermedio</span>
+                </div>
+
+                <!-- Opción Preparatoria -->
+                <div class="level-card" onclick="elegirNivelPrincipal('Preparatoria')">
+                    <div class="level-icon">⚡</div>
+                    <div class="level-info">
+                        <h3>Preparatoria (15 - 18 años)</h3>
+                        <p>Cinemática 2D en tiro parabólico, Ley de Snell, gases ideales P·V=n·R·T, cinética química y genética mendeliana avanzada.</p>
+                    </div>
+                    <span class="badge-level">Avanzado</span>
+                </div>
             </div>
 
-            <button type="button" class="secondary-btn btn-full" style="margin-top: 20px;" onclick="volverALogin()">
-                ← Cambiar de Estudiante
-            </button>
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button type="button" class="secondary-btn" style="width:100%;" onclick="regresarAlLogin()">
+                    ← Regresar al Inicio de Sesión
+                </button>
+            </div>
+            <small style="display:block; margin-top:14px; color:var(--muted);">Puedes cambiar tu nivel en cualquier momento desde la barra superior de la app.</small>
         </div>
     </div>
 
-    <!-- TALLER MODAL DE ENSAMBLAJE DE CIRCUITOS (LÍNEAS PUNTEADAS & DRAG & DROP) -->
-    <!-- IDÉNTICO A IMAGEN 2: BATERÍA 35V, INTERRUPTOR, RESISTENCIA 10Ω, BOMBILLA -->
-    <div id="modal-builder-circuito" class="circuit-modal-backdrop hidden">
-        <div class="circuit-modal-container">
-            <!-- CABECERA DEL TALLER -->
-            <div class="circuit-modal-header">
-                <div>
-                    <h3 style="font-size:1.25rem; font-weight:900; color:var(--text); display:flex; align-items:center; gap:8px;">
-                        <span>🔌</span> Taller de Ensamblaje: Circuito Cerrado y Ley de Ohm
-                    </h3>
-                    <small style="color:var(--cyan); font-weight:700;">Arrastra los componentes desde la barra lateral hasta las líneas punteadas del circuito</small>
-                </div>
-                <button class="btn-close" onclick="cerrarConstructorCircuito()" aria-label="Cerrar taller">✕</button>
-            </div>
-
-            <!-- CONTENEDOR PRINCIPAL: CIRCUITO (CENTRO) + BARRA DE COMPONENTES (LATERAL) -->
-            <div class="circuit-workbench-grid">
-
-                <!-- ÁREA DEL CIRCUITO ESQUEMÁTICO (ESTILO EXACTO A IMAGEN 2) -->
-                <div class="circuit-schematic-wrapper">
-                    <!-- ENCABEZADO DE DATOS TÉCNICOS -->
-                    <div class="circuit-quick-specs">
-                        <span>🔋 Voltaje: <b>35V</b></span>
-                        <span>⚡ Resistencia: <b>10 Ω</b></span>
-                        <span>💡 Ley de Ohm: <b>I = V / R = 3.50 A</b></span>
-                        <button class="secondary-btn" style="padding:4px 10px; font-size:12px; margin-left:auto; border-color:var(--cyan); color:var(--cyan);" onclick="ensamblarCircuitoCompleto()">
-                            ⚡ Auto-armar Todo
-                        </button>
-                    </div>
-
-                    <!-- TABLERO NEGRO DEL CIRCUITO CON LÍNEAS PUNTEADAS -->
-                    <div class="circuit-canvas-black" id="circuitBoardExact">
-                        <!-- BUCLE DE CABLE ESQUEMÁTICO RESPONSIVO -->
-                        <div class="circuit-wire-loop"></div>
-
-                        <!-- NODOS AZULES DE CONEXIÓN EN ESQUINAS -->
-                        <div class="node-dot node-tl"></div>
-                        <div class="node-dot node-tr"></div>
-                        <div class="node-dot node-br"></div>
-                        <div class="node-dot node-bl"></div>
-
-                        <!-- RANURA 1: BATERÍA (Lado Izquierdo) -->
-                        <div class="slot-target slot-pos-battery" id="slot-bateria"
-                             ondragover="handleCircuitDragOver(event)" ondragleave="handleCircuitDragLeave(event)"
-                             ondrop="handleCircuitDrop(event, 'bateria')" onclick="handleSlotClick('bateria')">
-                            <!-- Estado Punteado -->
-                            <div class="slot-dashed-box box-battery-dashed" id="outline-bateria">
-                                <span class="dashed-text">35V</span>
-                                <span class="dashed-sub">Arrastra Batería</span>
-                            </div>
-                            <!-- Estado Colocado (Bloque naranja exacto a Imagen 2) -->
-                            <div class="placed-battery-block hidden" id="placed-bateria">
-                                <div class="battery-label-side">35V</div>
-                                <div class="battery-orange-body"></div>
-                            </div>
-                        </div>
-
-                        <!-- RANURA 2: INTERRUPTOR (Lado Superior) -->
-                        <div class="slot-target slot-pos-switch" id="slot-switch"
-                             ondragover="handleCircuitDragOver(event)" ondragleave="handleCircuitDragLeave(event)"
-                             ondrop="handleCircuitDrop(event, 'switch')" onclick="handleSlotClick('switch')">
-                            <!-- Estado Punteado -->
-                            <div class="slot-dashed-box box-switch-dashed" id="outline-switch">
-                                <span class="dashed-sub">Arrastra Interruptor</span>
-                            </div>
-                            <!-- Estado Colocado (Barra verde exacta a Imagen 2) -->
-                            <div class="placed-switch-block hidden" id="placed-switch">
-                                <div class="switch-outer-track">
-                                    <div class="switch-green-slider"></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- RANURA 3: RESISTENCIA (Lado Derecho - Idéntica a Imagen 2) -->
-                        <div class="slot-target slot-pos-resistor" id="slot-resistencia"
-                             ondragover="handleCircuitDragOver(event)" ondragleave="handleCircuitDragLeave(event)"
-                             ondrop="handleCircuitDrop(event, 'resistencia')" onclick="handleSlotClick('resistencia')">
-                            <!-- Estado Punteado Compacto -->
-                            <div class="slot-dashed-box box-resistor-dashed" id="outline-resistencia">
-                                <span class="dashed-text">10 Ω</span>
-                                <span class="dashed-sub">Resistencia</span>
-                            </div>
-                            <!-- Estado Colocado (Zigzag morado exacto a Imagen 2) -->
-                            <div class="placed-resistor-block hidden" id="placed-resistencia">
-                                <div class="resistor-dot resistor-dot-top"></div>
-                                <svg viewBox="0 0 24 46" class="purple-zigzag-svg">
-                                    <path d="M 20 2 L 4 12 L 20 22 L 4 32 L 20 44" fill="none" stroke="#a855f7" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" />
-                                </svg>
-                                <div class="resistor-dot resistor-dot-bottom"></div>
-                                <span class="resistor-val-tag">10 Ω</span>
-                            </div>
-                        </div>
-
-                        <!-- RANURA 4: BOMBILLA (Lado Inferior) -->
-                        <div class="slot-target slot-pos-bulb" id="slot-bombilla"
-                             ondragover="handleCircuitDragOver(event)" ondragleave="handleCircuitDragLeave(event)"
-                             ondrop="handleCircuitDrop(event, 'bombilla')" onclick="handleSlotClick('bombilla')">
-                            <!-- Estado Punteado -->
-                            <div class="slot-dashed-box box-bulb-dashed" id="outline-bombilla">
-                                <span class="dashed-sub">Arrastra Bombilla</span>
-                            </div>
-                            <!-- Estado Colocado (Círculo amarillo con arco de filamento exacto a Imagen 2) -->
-                            <div class="placed-bulb-block hidden" id="placed-bombilla">
-                                <div class="bulb-yellow-circle" id="bulbGlowElement">
-                                    <div class="bulb-inner-arc"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- TARJETA DE ÉXITO Y BOTÓN PARA AVANZAR -->
-                    <div id="circuit-success-box" class="circuit-completion-success-bar hidden">
-                        <div class="success-message">
-                            <strong>⚡ ¡Circuito Armado y Energizado con Éxito!</strong>
-                            <p>Corriente eléctrica fluyendo: <b>I = V / R = 35V / 10Ω = 3.50 Amperes</b>. La bombilla está encendida.</p>
-                        </div>
-                        <button class="primary-btn pulse-glow-btn" onclick="completarConstruccionCircuito()">
-                            Continuar al Experimento →
-                        </button>
-                    </div>
-                </div>
-
-                <!-- BARRA LATERAL DERECHA: BANDEJA DE COMPONENTES DISPONIBLES -->
-                <div class="circuit-components-sidebar">
-                    <div class="sidebar-shelf-header">
-                        <h4>📦 Bandeja de Componentes</h4>
-                        <small>Haz clic en un componente para colocarlo o arrástralo directamente a su ranura punteada.</small>
-                    </div>
-
-                    <div class="components-shelf-list">
-                        <!-- 1. Batería -->
-                        <div class="shelf-component-card" id="drag-comp-bateria"
-                             draggable="true" ondragstart="handleCircuitDragStart(event, 'bateria')"
-                             onclick="seleccionarComponente('bateria')">
-                            <div class="shelf-comp-visual">
-                                <div class="mini-battery-render">35V</div>
-                            </div>
-                            <div class="shelf-comp-details">
-                                <strong>Batería DC (35V)</strong>
-                                <small>Fuente de voltaje continuo</small>
-                            </div>
-                            <span class="btn-drag-tag">Tomar / Colocar</span>
-                        </div>
-
-                        <!-- 2. Interruptor -->
-                        <div class="shelf-component-card" id="drag-comp-switch"
-                             draggable="true" ondragstart="handleCircuitDragStart(event, 'switch')"
-                             onclick="seleccionarComponente('switch')">
-                            <div class="shelf-comp-visual">
-                                <div class="mini-switch-render"></div>
-                            </div>
-                            <div class="shelf-comp-details">
-                                <strong>Interruptor</strong>
-                                <small>Conmutador de malla</small>
-                            </div>
-                            <span class="btn-drag-tag">Tomar / Colocar</span>
-                        </div>
-
-                        <!-- 3. Resistencia -->
-                        <div class="shelf-component-card" id="drag-comp-resistencia"
-                             draggable="true" ondragstart="handleCircuitDragStart(event, 'resistencia')"
-                             onclick="seleccionarComponente('resistencia')">
-                            <div class="shelf-comp-visual">
-                                <svg viewBox="0 0 24 45" style="width:20px; height:34px;">
-                                    <path d="M 18 2 L 6 12 L 18 22 L 6 32 L 18 42" fill="none" stroke="#a855f7" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" />
-                                </svg>
-                            </div>
-                            <div class="shelf-comp-details">
-                                <strong>Resistencia (10 Ω)</strong>
-                                <small>Carga resistiva</small>
-                            </div>
-                            <span class="btn-drag-tag">Tomar / Colocar</span>
-                        </div>
-
-                        <!-- 4. Bombilla -->
-                        <div class="shelf-component-card" id="drag-comp-bombilla"
-                             draggable="true" ondragstart="handleCircuitDragStart(event, 'bombilla')"
-                             onclick="seleccionarComponente('bombilla')">
-                            <div class="shelf-comp-visual">
-                                <div class="mini-bulb-render">
-                                    <div class="mini-bulb-arc"></div>
-                                </div>
-                            </div>
-                            <div class="shelf-comp-details">
-                                <strong>Bombilla Eléctrica</strong>
-                                <small>Indicador lumínico</small>
-                            </div>
-                            <span class="btn-drag-tag">Tomar / Colocar</span>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    </div>
-
-    <!-- PANTALLA PRINCIPAL: NEXORA LAB -->
-    <div id="appScreen" class="app-container hidden">
+    <!-- 3. APLICACIÓN PRINCIPAL -->
+    <div id="app" class="app hidden">
 
         <!-- BARRA LATERAL (SIDEBAR) -->
         <aside class="sidebar">
             <div class="brand">
-                <span class="brand-icon">🧬</span>
-                <span class="brand-name">Nexora <span>LAB</span></span>
+                <span class="brand-icon">🧪</span>
+                <div>
+                    <h2>NEXORA LAB</h2>
+                    <small>Laboratorio virtual</small>
+                </div>
             </div>
 
-            <nav class="nav-links">
-                <button class="nav-btn active" data-section="inicio">
-                    <span class="nav-icon">🏠</span> Inicio
-                </button>
-                <button class="nav-btn" data-section="fisica">
-                    <span class="nav-icon">⚡</span> Física
-                </button>
-                <button class="nav-btn" data-section="quimica">
-                    <span class="nav-icon">🧪</span> Química
-                </button>
-                <button class="nav-btn" data-section="biologia">
-                    <span class="nav-icon">🌱</span> Biología
-                </button>
-                <button class="nav-btn" data-section="evaluacion">
-                    <span class="nav-icon">📝</span> Evaluaciones
-                </button>
-                <button class="nav-btn" data-section="progreso">
-                    <span class="nav-icon">🏆</span> Mi Progreso
-                </button>
-                <button class="nav-btn" data-section="ia">
-                    <span class="nav-icon">🤖</span> NEXOR-IA
-                </button>
+            <nav>
+                <button class="nav-btn active" data-section="inicio">🏠 Inicio</button>
+                <button class="nav-btn" data-section="fisica">⚡ Física</button>
+                <button class="nav-btn" data-section="quimica">🧪 Química</button>
+                <button class="nav-btn" data-section="biologia">🌱 Biología</button>
+                <button class="nav-btn" data-section="evaluacion">📝 Evaluaciones</button>
+                <button class="nav-btn" data-section="progreso">🏆 Mi progreso</button>
+                <button class="nav-btn" data-section="ia">🤖 NEXOR-IA</button>
             </nav>
 
-            <div class="user-profile">
-                <div class="avatar">👨‍🔬</div>
-                <div class="user-info">
-                    <span class="user-name" id="displayStudent">Estudiante</span>
-                    <button class="logout-link" onclick="logout()">Cerrar sesión</button>
-                </div>
+            <div class="sidebar-bottom">
+                <p>Aprender es experimentar.</p>
+                <button id="logoutBtn" class="logout-btn">Cerrar sesión</button>
             </div>
         </aside>
 
         <!-- CONTENIDO PRINCIPAL -->
         <main class="main-content">
-            <!-- BARRA SUPERIOR (HEADER) -->
+
+            <!-- BARRA SUPERIOR (TOPBAR) -->
             <header class="topbar">
-                <div class="topbar-left">
+                <div>
                     <h2 id="pageTitle">Bienvenido al laboratorio</h2>
                     <p id="pageSubtitle">Explora, experimenta y descubre.</p>
                 </div>
-                <div class="topbar-right">
-                    <!-- SELECTOR / INDICADOR RÁPIDO DE NIVEL -->
-                    <div class="badge-nivel" onclick="cambiarNivelRapido()" title="Clic para alternar entre Secundaria y Preparatoria">
-                        🎓 Nivel: <b id="lblNivelTopbar">Secundaria</b> 🔄 <small style="font-weight:normal; opacity:0.8;">Cambiar</small>
-                    </div>
-
-                    <div class="network-badge online" id="net-badge">
-                        <span class="pulse-dot"></span>
-                        <span id="net-text">Conectado (IA Global lista)</span>
-                    </div>
-                    
-                    <button id="themeToggleBtn" class="theme-toggle" title="Cambiar Tema Claro / Oscuro" aria-label="Cambiar tema">
-                        🌓
-                    </button>
-                    
-                    <button class="theme-toggle" onclick="toggleModalConfig()" title="Configuración de IA Nube" aria-label="Configuración de IA">
-                        ⚙️
+                <div class="topbar-actions">
+                    <!-- BOTÓN DE NIVEL ACTIVO CON OPCIÓN PARA CAMBIAR -->
+                    <button id="btnNivelTopbar" class="pill" onclick="abrirCambioNivel()" title="Haz clic para alternar entre Secundaria y Preparatoria" style="cursor:pointer; border: 1px solid var(--cyan);">
+                        🎓 Nivel: <strong id="lblNivelTopbar" style="color:var(--cyan); margin-left:4px;">Secundaria</strong> <span style="font-size:11px; margin-left:4px;">🔄 Cambiar</span>
                     </button>
 
-                    <div class="user-badge" id="topbarUser">
-                        <span>👨‍🔬</span> <span id="topbarUserName">Estudiante</span>
+                    <!-- INDICADOR DE RED -->
+                    <div id="estado-red" class="pill online" title="Estado de conectividad">🟢 Conectado</div>
+                    
+                    <!-- BOTÓN MODO OSCURO / MODO CLARO -->
+                    <button id="themeToggleBtn" class="theme-toggle-btn" title="Cambiar a Modo Claro / Oscuro" aria-label="Cambiar tema">🌙</button>
+
+                    <!-- BOTÓN DE CONFIGURACIÓN DE IA -->
+                    <button class="theme-toggle-btn" onclick="toggleModalConfig()" title="Configuración de IA">⚙️</button>
+                    
+                    <!-- INFORMACIÓN DEL ESTUDIANTE -->
+                    <div class="student-info">
+                        <span>👩‍🔬</span>
+                        <strong id="welcomeName">Estudiante</strong>
                     </div>
                 </div>
             </header>
 
             <!-- 1. SECCIÓN INICIO -->
             <section id="inicio" class="section active-section">
-                <div class="hero-card">
-                    <span class="tag">CIENCIA ESCOLAR INTERACTIVA</span>
-                    <h1>¡La ciencia está en tus manos!</h1>
-                    <p>Aprende Física, Química y Biología con simuladores interactivos, un constructor dinámico de fórmulas, 18 misiones del método científico con circuitos para armar y el asistente inteligente <b>NEXOR-IA</b>.</p>
-                    <div class="hero-actions">
-                        <button class="primary-btn" onclick="showSection('fisica')">Entrar a Física ⚡</button>
-                        <button class="secondary-btn" onclick="showSection('quimica')">Explorar Química 🧪</button>
-                        <button class="secondary-btn" onclick="showSection('biologia')">Ver Biología 🌱</button>
+                <div class="hero">
+                    <div>
+                        <span class="tag">TU AVENTURA CIENTÍFICA COMIENZA AQUÍ</span>
+                        <h1>¡Hola, <span id="heroName">estudiante</span>!</h1>
+                        <p>
+                            No necesitas un laboratorio físico para descubrir
+                            cómo funciona el mundo. Las 18 misiones científicas y los simuladores interactivos están organizados en sus materias para ti.
+                        </p>
+                        <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:18px;">
+                            <button class="primary-btn" onclick="showSection('fisica')">
+                                Explorar Física (Misiones & Fórmulas) →
+                            </button>
+                            <button class="secondary-btn" onclick="showSection('quimica')">
+                                🧪 Laboratorio de Química
+                            </button>
+                            <button class="secondary-btn" onclick="showSection('biologia')">
+                                🌱 Laboratorio de Biología
+                            </button>
+                        </div>
                     </div>
+                    <div class="hero-emoji">🔬</div>
                 </div>
 
-                <div class="cards-grid">
-                    <div class="info-card" onclick="showSection('fisica')">
-                        <div class="card-icon">⚡</div>
-                        <h3>Laboratorio de Física</h3>
-                        <p>Simulador de velocidad, constructor de 5 fórmulas dinámicas y 6 misiones de cinemática, Newton y circuitos.</p>
+                <h2 class="section-heading">Tus 3 Grandes Ramas Científicas</h2>
+
+                <div class="subject-grid">
+                    <article class="subject-card physics">
+                        <div class="subject-icon">⚡</div>
+                        <h3>Física</h3>
+                        <p>3 misiones del método científico, constructor dinámico de 5 fórmulas, velocidad y Ley de Ohm.</p>
+                        <button onclick="showSection('fisica')">Entrar a Física →</button>
+                    </article>
+
+                    <article class="subject-card chemistry">
+                        <div class="subject-icon">🧪</div>
+                        <h3>Química</h3>
+                        <p>3 misiones científicas (pH, densidad, gases), simulador de mezclas y modelo del átomo.</p>
+                        <button onclick="showSection('quimica')">Entrar a Química →</button>
+                    </article>
+
+                    <article class="subject-card biology">
+                        <div class="subject-icon">🌱</div>
+                        <h3>Biología</h3>
+                        <p>3 misiones científicas (fotosíntesis, células, genética), simulador vegetal y partes celulares.</p>
+                        <button onclick="showSection('biologia')">Entrar a Biología →</button>
+                    </article>
+                </div>
+
+                <div class="info-banner" style="margin-top:20px;">
+                    <div>
+                        <h3>🎓 Nivel Escolar Actual: <span class="txt-nivel-actual" style="color:var(--cyan); font-weight:900;">Secundaria</span></h3>
+                        <p>Las misiones se adaptan automáticamente a los contenidos de tu grado. Si deseas cambiar de nivel, haz clic a continuación:</p>
                     </div>
-                    <div class="info-card" onclick="showSection('quimica')">
-                        <div class="card-icon">🧪</div>
-                        <h3>Laboratorio de Química</h3>
-                        <p>Simulador de mezclas homogéneas y heterogéneas, modelo de átomo y 6 misiones científicas con reacciones y pH.</p>
-                    </div>
-                    <div class="info-card" onclick="showSection('biologia')">
-                        <div class="card-icon">🌱</div>
-                        <h3>Laboratorio de Biología</h3>
-                        <p>Fotosíntesis con clorofila, partes interactivas de la célula y 6 misiones de genética, mitosis y ecología.</p>
-                    </div>
+                    <button onclick="abrirCambioNivel()">Cambiar Nivel Escolar 🔄</button>
                 </div>
             </section>
 
-            <!-- 2. SECCIÓN FÍSICA -->
+            <!-- 2. SECCIÓN FÍSICA (CON SUS MISIONES CIENTÍFICAS Y SIMULADORES DEL VIDEO) -->
             <section id="fisica" class="section">
                 <div class="section-intro">
-                    <span class="tag">LABORATORIO DE FÍSICA</span>
-                    <h1>⚡ Cinemática, Dinámica y Circuitos</h1>
-                    <p>Misiones científicas en 7 pasos, simulador de movimiento rectilíneo y constructor de 5 fórmulas.</p>
+                    <span class="tag">MATERIA 01</span>
+                    <h1>⚡ Laboratorio de Física</h1>
+                    <p>Experimenta con las misiones del método científico y utiliza las herramientas interactivas de cálculo.</p>
                 </div>
 
-                <!-- SUB-SECCIÓN: 6 MISIONES CIENTÍFICAS DE FÍSICA -->
-                <div class="subject-card wide-card" style="margin-bottom: 24px;">
-                    <div class="flex-between" style="margin-bottom: 15px; flex-wrap:wrap; gap:10px;">
+                <!-- CONTENEDOR DE MISIONES CIENTÍFICAS DE FÍSICA -->
+                <article class="subject-card wide-card" style="border-top: 4px solid var(--cyan); margin-bottom: 24px;">
+                    <div class="flex-between" style="flex-wrap: wrap; gap: 10px; margin-bottom: 14px;">
                         <div>
-                            <h3 style="font-size:20px; font-weight:900;">🚀 Misiones Científicas de Física (<span class="txt-nivel-actual">Secundaria</span>)</h3>
-                            <p style="color:var(--muted); font-size:14px; margin-top:3px;">
-                                Desarrolla los 7 pasos del método científico en cada misión interactiva:
-                            </p>
+                            <span class="card-badge">🔬 MÉTODO CIENTÍFICO EN 7 PASOS</span>
+                            <h3 style="font-size: 21px; font-weight: 900; margin-top: 6px;">Misiones de Física (<span class="txt-nivel-actual">Secundaria</span>)</h3>
+                            <p style="color:var(--muted); font-size:14px;">Elige una misión para experimentar con simulación gráfica interactiva y evaluación por IA:</p>
                         </div>
-                        <button class="secondary-btn" style="padding:6px 14px; font-size:13px;" onclick="cambiarNivelRapido()">
-                            Ver misiones de <span id="btn-toggle-nivel-fisica">Preparatoria</span> 🎓
+                        <button class="secondary-btn" style="font-size:12px; padding:7px 14px;" onclick="abrirCambioNivel()">
+                            Cambiar a <span id="btn-toggle-nivel-fisica">Preparatoria</span> 🔄
                         </button>
                     </div>
+                    <div id="lista-misiones-fisica" class="experiments-grid"></div>
+                </article>
 
-                    <div class="exp-list" id="lista-misiones-fisica"></div>
+                <h2 class="section-heading" style="margin-top: 28px;">Simuladores y Herramientas de Física</h2>
+
+                <div class="experiment-grid">
+                    <article class="experiment-card">
+                        <h3>🚗 Simulador de velocidad</h3>
+                        <p>Investiga la relación entre distancia, tiempo y velocidad.</p>
+
+                        <label for="distance">Distancia (metros)</label>
+                        <input type="number" id="distance" value="100" min="0">
+
+                        <label for="time">Tiempo (segundos)</label>
+                        <input type="number" id="time" value="10" min="0.1" step="0.1">
+
+                        <button class="primary-btn" onclick="calculateSpeed()">Calcular velocidad</button>
+                        <div id="speedResult" class="result-box">Aquí aparecerá el resultado.</div>
+                    </article>
+
+                    <article class="experiment-card">
+                        <h3>💡 Ley de Ohm</h3>
+                        <p>Explora la relación entre voltaje, corriente y resistencia.</p>
+
+                        <label for="voltage">Voltaje (V)</label>
+                        <input type="number" id="voltage" value="12" min="0">
+
+                        <label for="resistance">Resistencia (Ω)</label>
+                        <input type="number" id="resistance" value="4" min="0.1" step="0.1">
+
+                        <button class="primary-btn" onclick="calculateOhm()">Calcular corriente</button>
+                        <div id="ohmResult" class="result-box">Aquí aparecerá el resultado.</div>
+                    </article>
                 </div>
 
-                <!-- SIMULADOR 1 DE TUTORIAL: VELOCIDAD (v = d / t) -->
-                <div class="experiment-card">
-                    <div class="exp-header">
-                        <div>
-                            <span class="tag">SIMULADOR 01</span>
-                            <h3>Cálculo de Velocidad Media</h3>
-                            <p>Introduce la distancia recorrida y el tiempo empleado para calcular la velocidad.</p>
-                        </div>
-                        <div class="formula-chip">v = d / t</div>
-                    </div>
-
-                    <div class="input-grid">
-                        <div class="input-group">
-                            <label for="distance">Distancia (metros):</label>
-                            <input type="number" id="distance" value="100" min="0" step="any">
-                        </div>
-                        <div class="input-group">
-                            <label for="time">Tiempo (segundos):</label>
-                            <input type="number" id="time" value="10" min="0.1" step="any">
-                        </div>
-                    </div>
-
-                    <div class="btn-group">
-                        <button class="primary-btn" onclick="calculateSpeed()">Calcular Velocidad</button>
-                    </div>
-
-                    <div id="speedResult" class="result-box hidden"></div>
+                <div class="learning-note">
+                    <strong>💡 Aprende:</strong>
+                    La velocidad media se calcula dividiendo la distancia entre el tiempo.
+                    La ley de Ohm relaciona voltaje, corriente y resistencia: I = V / R.
                 </div>
 
-                <!-- SIMULADOR 2 DE TUTORIAL: CONSTRUCTOR DE 5 FÓRMULAS DINÁMICAS -->
-                <div class="experiment-card" style="margin-top: 24px;">
-                    <div class="exp-header">
-                        <div>
-                            <span class="tag">SIMULADOR 02</span>
-                            <h3>Constructor de Fórmulas Dinámicas</h3>
-                            <p>Selecciona una fórmula de física escolar para calcularla en tiempo real con cualquier valor.</p>
-                        </div>
-                        <div class="formula-chip" id="dynamicFormulaChip">v = d / t</div>
+                <!-- CONSTRUCTOR DE FÓRMULAS DINÁMICAS (DEL VIDEO TUTORIAL) -->
+                <article class="experiment-card wide-card formula-builder-card" style="margin-top:22px;">
+                    <div class="card-badge">🛠️ HERRAMIENTA DEL TUTORIAL</div>
+                    <h3>Constructor de fórmulas dinámicas</h3>
+                    <p>Selecciona una fórmula, modifica sus variables y descubre cómo cambian los resultados.</p>
+
+                    <label for="formulaSelect">Selecciona una fórmula:</label>
+                    <select id="formulaSelect">
+                        <option value="" disabled selected>Selecciona una fórmula</option>
+                        <option value="velocidad">Velocidad</option>
+                        <option value="fuerza">Fuerza</option>
+                        <option value="densidad">Densidad</option>
+                        <option value="energia">Energía cinética</option>
+                        <option value="ohm">Ley de Ohm</option>
+                    </select>
+
+                    <div id="formulaInputs" class="formula-inputs-grid"></div>
+
+                    <button id="calculateFormulaBtn" class="primary-btn hidden">
+                        Calcular resultado
+                    </button>
+
+                    <div id="formulaResultBadge" class="result-badge hidden">
+                        Resultado: <span id="formulaResultValue">0.3529 m/s</span>
                     </div>
 
-                    <div class="input-group" style="margin-bottom: 16px;">
-                        <label for="formulaSelector">Selecciona la fórmula física:</label>
-                        <select id="formulaSelector" onchange="renderDynamicFormulaInputs()">
-                            <option value="velocidad">1. Velocidad (v = d / t)</option>
-                            <option value="fuerza">2. Segunda Ley de Newton - Fuerza (F = m · a)</option>
-                            <option value="densidad">3. Densidad (d = m / V)</option>
-                            <option value="energia">4. Energía Cinética (Ec = 0.5 · m · v²)</option>
-                            <option value="ohm">5. Ley de Ohm (I = V / R)</option>
-                        </select>
+                    <div id="formulaResultDetails" class="result-box hidden">
+                        <p><strong>Fórmula:</strong> <span id="formulaFormulaText">v = Distancia / Tiempo</span></p>
+                        <p><strong>Procedimiento:</strong> <span id="formulaProcedureText">Se sustituyeron los valores introducidos en la fórmula seleccionada.</span></p>
+                        <p><strong>Resultado:</strong> <span id="formulaDetailResult">0.3529 m/s</span></p>
                     </div>
 
-                    <div id="dynamicInputsContainer" class="input-grid"></div>
-
-                    <div class="btn-group">
-                        <button class="primary-btn" onclick="calculateDynamicFormula()">Calcular Resultado</button>
+                    <div id="formulaPlaceholder" class="result-box">
+                        Selecciona una fórmula para comenzar.
                     </div>
-
-                    <div id="dynamicFormulaResult" class="result-box hidden"></div>
-                </div>
+                </article>
             </section>
 
-            <!-- 3. SECCIÓN QUÍMICA -->
+            <!-- 3. SECCIÓN QUÍMICA (CON SUS MISIONES CIENTÍFICAS Y SIMULADORES) -->
             <section id="quimica" class="section">
                 <div class="section-intro">
-                    <span class="tag">LABORATORIO DE QUÍMICA</span>
-                    <h1>🧪 Mezclas, Átomos y Reacciones</h1>
-                    <p>Misiones científicas con reactivos, modelo atómico y simulador de mezclas.</p>
+                    <span class="tag">MATERIA 02</span>
+                    <h1>🧪 Laboratorio de Química</h1>
+                    <p>Explora misiones experimentales, mezclas moleculares y la estructura de la materia.</p>
                 </div>
 
-                <!-- SUB-SECCIÓN: 6 MISIONES CIENTÍFICAS DE QUÍMICA -->
-                <div class="subject-card wide-card" style="margin-bottom: 24px;">
-                    <div class="flex-between" style="margin-bottom: 15px; flex-wrap:wrap; gap:10px;">
+                <!-- CONTENEDOR DE MISIONES CIENTÍFICAS DE QUÍMICA -->
+                <article class="subject-card wide-card" style="border-top: 4px solid var(--pink); margin-bottom: 24px;">
+                    <div class="flex-between" style="flex-wrap: wrap; gap: 10px; margin-bottom: 14px;">
                         <div>
-                            <h3 style="font-size:20px; font-weight:900;">🚀 Misiones Científicas de Química (<span class="txt-nivel-actual">Secundaria</span>)</h3>
-                            <p style="color:var(--muted); font-size:14px; margin-top:3px;">
-                                Experimenta con pH, estequiometría, disoluciones y estados de agregación:
-                            </p>
+                            <span class="card-badge" style="color:var(--pink); background:rgba(255,112,183,0.15);">🔬 MÉTODO CIENTÍFICO EN 7 PASOS</span>
+                            <h3 style="font-size: 21px; font-weight: 900; margin-top: 6px;">Misiones de Química (<span class="txt-nivel-actual">Secundaria</span>)</h3>
+                            <p style="color:var(--muted); font-size:14px;">Realiza experimentos con pH, gases, densidad y titulación cuantitativa:</p>
                         </div>
-                        <button class="secondary-btn" style="padding:6px 14px; font-size:13px;" onclick="cambiarNivelRapido()">
-                            Ver misiones de <span id="btn-toggle-nivel-quimica">Preparatoria</span> 🎓
+                        <button class="secondary-btn" style="font-size:12px; padding:7px 14px;" onclick="abrirCambioNivel()">
+                            Cambiar a <span id="btn-toggle-nivel-quimica">Preparatoria</span> 🔄
                         </button>
                     </div>
+                    <div id="lista-misiones-quimica" class="experiments-grid"></div>
+                </article>
 
-                    <div class="exp-list" id="lista-misiones-quimica"></div>
-                </div>
+                <h2 class="section-heading" style="margin-top: 28px;">Simuladores y Modelos Químicos</h2>
 
-                <!-- SIMULADOR 1 DE QUÍMICA: MEZCLAS -->
-                <div class="experiment-card">
-                    <div class="exp-header">
+                <article class="experiment-card wide-card">
+                    <h3>⚗️ Simulador de mezclas</h3>
+                    <p>Selecciona dos sustancias para observar qué ocurre en esta simulación conceptual.</p>
+
+                    <div class="mix-selectors">
                         <div>
-                            <span class="tag">SIMULADOR 01</span>
-                            <h3>Simulador Conceptual de Mezclas</h3>
-                            <p>Combina dos sustancias para identificar si forman una mezcla homogénea o heterogénea.</p>
-                        </div>
-                    </div>
-
-                    <div class="input-grid">
-                        <div class="input-group">
-                            <label for="substanceA">Sustancia A:</label>
-                            <select id="substanceA">
+                            <label for="substanceOne">Primera sustancia</label>
+                            <select id="substanceOne">
                                 <option value="agua">Agua</option>
-                                <option value="alcohol">Alcohol</option>
+                                <option value="aceite">Aceite</option>
+                                <option value="sal">Sal</option>
+                                <option value="azucar">Azúcar</option>
+                                <option value="arena">Arena</option>
                             </select>
                         </div>
-                        <div class="input-group">
-                            <label for="substanceB">Sustancia B:</label>
-                            <select id="substanceB">
+                        <div>
+                            <label for="substanceTwo">Segunda sustancia</label>
+                            <select id="substanceTwo">
                                 <option value="sal">Sal</option>
+                                <option value="agua">Agua</option>
                                 <option value="aceite">Aceite</option>
+                                <option value="azucar">Azúcar</option>
                                 <option value="arena">Arena</option>
                             </select>
                         </div>
                     </div>
 
-                    <div class="btn-group">
-                        <button class="primary-btn" onclick="mixSubstances()">Combinar Sustancias</button>
+                    <div id="beakerEmoji" class="beaker">🧪</div>
+                    <button class="primary-btn" onclick="mixSubstances()">Realizar mezcla virtual</button>
+                    <div id="mixResult" class="result-box">
+                        Selecciona las sustancias para comenzar.
                     </div>
-
-                    <div id="mixtureResult" class="result-box hidden"></div>
-                </div>
-
-                <!-- SIMULADOR 2 DE QUÍMICA: ÁTOMO -->
-                <div class="experiment-card" style="margin-top: 24px;">
-                    <div class="exp-header">
-                        <div>
-                            <span class="tag">SIMULADOR 02</span>
-                            <h3>Modelo Visual del Átomo</h3>
-                            <p>Observa la estructura fundamental de la materia con protones, neutrones y electrones orbitando.</p>
-                        </div>
-                    </div>
-
-                    <div class="atom-stage">
-                        <div class="atom-nucleus">
-                            <span>+</span>
-                            <span>n</span>
-                        </div>
-                        <div class="electron-orbit orbit-one">
-                            <div class="electron"></div>
-                        </div>
-                        <div class="electron-orbit orbit-two">
-                            <div class="electron"></div>
-                        </div>
-                    </div>
-
-                    <p style="text-align: center; color: var(--muted); font-size: 14px; margin-top: 15px;">
-                        El núcleo contiene protones (carga +) y neutrones (sin carga). En las órbitas giran los electrones (carga -).
+                    <p class="safety-note">
+                        Simulación educativa: no representa una práctica real.
+                        No mezcles sustancias químicas fuera de un laboratorio supervisado.
                     </p>
-                </div>
+                </article>
+
+                <article class="experiment-card wide-card">
+                    <h3>⚛️ Conoce la estructura del átomo</h3>
+                    <div class="atom-area">
+                        <div class="atom">⚛️</div>
+                        <div>
+                            <p><strong>Protón:</strong> tiene carga positiva (+).</p>
+                            <p><strong>Neutrón:</strong> no tiene carga eléctrica (0).</p>
+                            <p><strong>Electrón:</strong> tiene carga negativa (-).</p>
+                        </div>
+                    </div>
+                </article>
             </section>
 
-            <!-- 4. SECCIÓN BIOLOGÍA -->
+            <!-- 4. SECCIÓN BIOLOGÍA (CON SUS MISIONES CIENTÍFICAS Y SIMULADORES) -->
             <section id="biologia" class="section">
                 <div class="section-intro">
-                    <span class="tag">LABORATORIO DE BIOLOGÍA</span>
-                    <h1>🌱 La Célula y la Vida</h1>
-                    <p>Misiones de genética y ecología, fotosíntesis vegetal y componentes celulares.</p>
+                    <span class="tag">MATERIA 03</span>
+                    <h1>🌱 Laboratorio de Biología</h1>
+                    <p>Investiga cómo funcionan los seres vivos mediante hipótesis, modelos y simulaciones celulares.</p>
                 </div>
 
-                <!-- SUB-SECCIÓN: 6 MISIONES CIENTÍFICAS DE BIOLOGÍA -->
-                <div class="subject-card wide-card" style="margin-bottom: 24px;">
-                    <div class="flex-between" style="margin-bottom: 15px; flex-wrap:wrap; gap:10px;">
+                <!-- CONTENEDOR DE MISIONES CIENTÍFICAS DE BIOLOGÍA -->
+                <article class="subject-card wide-card" style="border-top: 4px solid var(--green); margin-bottom: 24px;">
+                    <div class="flex-between" style="flex-wrap: wrap; gap: 10px; margin-bottom: 14px;">
                         <div>
-                            <h3 style="font-size:20px; font-weight:900;">🚀 Misiones Científicas de Biología (<span class="txt-nivel-actual">Secundaria</span>)</h3>
-                            <p style="color:var(--muted); font-size:14px; margin-top:3px;">
-                                Experimenta con clorofila, cuadros de Punnett, mitosis y cadenas tróficas:
-                            </p>
+                            <span class="card-badge" style="color:var(--green); background:rgba(84,230,165,0.15);">🔬 MÉTODO CIENTÍFICO EN 7 PASOS</span>
+                            <h3 style="font-size: 21px; font-weight: 900; margin-top: 6px;">Misiones de Biología (<span class="txt-nivel-actual">Secundaria</span>)</h3>
+                            <p style="color:var(--muted); font-size:14px;">Explora la fotosíntesis, estructura celular, genética mendeliana y enzimas:</p>
                         </div>
-                        <button class="secondary-btn" style="padding:6px 14px; font-size:13px;" onclick="cambiarNivelRapido()">
-                            Ver misiones de <span id="btn-toggle-nivel-biologia">Preparatoria</span> 🎓
+                        <button class="secondary-btn" style="font-size:12px; padding:7px 14px;" onclick="abrirCambioNivel()">
+                            Cambiar a <span id="btn-toggle-nivel-biologia">Preparatoria</span> 🔄
                         </button>
                     </div>
+                    <div id="lista-misiones-biologia" class="experiments-grid"></div>
+                </article>
 
-                    <div class="exp-list" id="lista-misiones-biologia"></div>
-                </div>
+                <h2 class="section-heading" style="margin-top: 28px;">Simuladores y Modelos Biológicos</h2>
 
-                <!-- SIMULADOR 1 DE BIOLOGÍA: FOTOSÍNTESIS -->
-                <div class="experiment-card">
-                    <div class="exp-header">
-                        <div>
-                            <span class="tag">SIMULADOR 01</span>
-                            <h3>Simulador de Fotosíntesis</h3>
-                            <p>Ajusta el nivel de luz y agua para observar la producción de oxígeno y glucosa.</p>
-                        </div>
+                <article class="experiment-card wide-card">
+                    <h3>🌞 Simulador de fotosíntesis</h3>
+                    <p>Modifica la intensidad de luz y observa el modelo educativo.</p>
+
+                    <label for="lightSlider">Intensidad de luz: <strong id="lightValue">50%</strong></label>
+                    <input type="range" id="lightSlider" min="0" max="100" value="50">
+
+                    <div class="plant-display">
+                        <span id="plantEmoji">🌿</span>
                     </div>
 
-                    <div class="input-grid">
-                        <div class="input-group">
-                            <label for="lightLevel">Luz solar (%):</label>
-                            <input type="range" id="lightLevel" min="0" max="100" value="50" oninput="document.getElementById('lightVal').textContent = this.value + '%'">
-                            <span id="lightVal" style="color: var(--cyan); font-weight: bold;">50%</span>
-                        </div>
-                        <div class="input-group">
-                            <label for="waterLevel">Disponibilidad de agua (%):</label>
-                            <input type="range" id="waterLevel" min="0" max="100" value="50" oninput="document.getElementById('waterVal').textContent = this.value + '%'">
-                            <span id="waterVal" style="color: var(--cyan); font-weight: bold;">50%</span>
-                        </div>
+                    <div id="photoResult" class="result-box">
+                        La planta utiliza luz, agua y dióxido de carbono para realizar la fotosíntesis.
                     </div>
+                </article>
 
-                    <div class="btn-group">
-                        <button class="primary-btn" onclick="simulatePhotosynthesis()">Analizar Fotosíntesis</button>
-                    </div>
-
-                    <div id="photoResult" class="result-box hidden"></div>
-                </div>
-
-                <!-- SIMULADOR 2 DE BIOLOGÍA: PARTES DE LA CÉLULA -->
-                <div class="experiment-card" style="margin-top: 24px;">
-                    <div class="exp-header">
-                        <div>
-                            <span class="tag">SIMULADOR 02</span>
-                            <h3>Estructura Celular Interactiva</h3>
-                            <p>Toca cada organelo para conocer su función primordial en la célula.</p>
-                        </div>
-                    </div>
-
+                <article class="experiment-card wide-card">
+                    <h3>🔬 Partes principales de la célula</h3>
                     <div class="cell-grid">
-                        <button class="cell-part" onclick="showCellInfo('nucleo')">
+                        <div class="cell-part">
+                            <span>🟣</span>
                             <strong>Núcleo</strong>
-                            <small>Almacena el ADN</small>
-                        </button>
-                        <button class="cell-part" onclick="showCellInfo('mitocondria')">
-                            <strong>Mitocondria</strong>
-                            <small>Produce energía (ATP)</small>
-                        </button>
-                        <button class="cell-part" onclick="showCellInfo('membrana')">
+                            <p>Contiene el material genético.</p>
+                        </div>
+                        <div class="cell-part">
+                            <span>🫧</span>
                             <strong>Membrana</strong>
-                            <small>Controla entradas y salidas</small>
-                        </button>
-                        <button class="cell-part" onclick="showCellInfo('citoplasma')">
+                            <p>Regula el intercambio con el exterior.</p>
+                        </div>
+                        <div class="cell-part">
+                            <span>🔵</span>
                             <strong>Citoplasma</strong>
-                            <small>Medio interno celular</small>
-                        </button>
+                            <p>Medio donde se encuentran los orgánulos.</p>
+                        </div>
                     </div>
-
-                    <div id="cellInfoBox" class="result-box hidden" style="margin-top: 15px;"></div>
-                </div>
+                </article>
             </section>
 
-            <!-- 5. SECCIÓN LABORATORIO ACTIVO: EL MÉTODO CIENTÍFICO EN 7 PASOS -->
+            <!-- 5. SECCIÓN LABORATORIO ACTIVO (MÉTODO CIENTÍFICO EN 7 PASOS) -->
             <section id="laboratorio-activo" class="section">
-                <!-- SUB-VISTA: WORKBENCH DEL MÉTODO CIENTÍFICO -->
-                <div id="vista-laboratorio">
-                    <!-- ENCABEZADO CON SALIDA Y PROGRESIÓN -->
-                    <div class="flex-between" style="margin-bottom:15px; flex-wrap:wrap; gap:10px;">
-                        <button class="secondary-btn" onclick="salirDelLaboratorio()">
-                            ← Salir y Volver a la Materia
-                        </button>
-                        <div id="btn-reopen-circuit-box" class="hidden">
-                            <button class="primary-btn pulse-glow-btn" onclick="abrirConstructorCircuito()">
-                                🔌 Abrir Taller de Ensamblaje de Circuitos
-                            </button>
+                <!-- VISTA ACTIVA DEL EXPERIMENTO EN 7 PASOS -->
+                <div id="vista-laboratorio" class="subject-card wide-card">
+                    <div class="lab-nav">
+                        <button class="secondary-btn" onclick="salirDelLaboratorio()">← Salir y Volver a la Materia</button>
+                        <span id="lab-tag" class="tag">FÍSICA</span>
+                    </div>
+                    <h2 id="lab-titulo" style="font-size: 24px; font-weight:900; margin: 12px 0 16px;">Título del Experimento</h2>
+
+                    <div class="progress-wrap">
+                        <div class="progress-track">
+                            <div id="progress-fill" class="progress-fill"></div>
                         </div>
+                        <div id="step-name" class="step-label">Paso 1/7: 1. Observación</div>
                     </div>
 
-                    <div class="subject-card wide-card" style="margin-bottom: 20px;">
-                        <div class="flex-between">
-                            <div>
-                                <span class="tag" id="lab-tag">FÍSICA</span>
-                                <h1 id="lab-titulo" style="font-size:24px; margin-top:4px;">Nombre del Experimento</h1>
-                            </div>
-                            <div class="stepper-indicator">
-                                <span id="lab-paso-badge">Paso 1 de 7</span>
-                            </div>
-                        </div>
+                    <!-- CONTENEDOR DE PASOS -->
+                    <div id="lab-steps-container">
 
-                        <!-- BARRA DE PROGRESO DE 7 PASOS -->
-                        <div class="progress-bar-container">
-                            <div class="progress-bar-fill" id="lab-progreso-fill" style="width: 14%;"></div>
-                        </div>
-                    </div>
-
-                    <!-- CONTENIDO DE CADA PASO CIENTÍFICO -->
-                    <div class="subject-card wide-card">
-
-                        <!-- PASO 1: OBSERVACIÓN -->
-                        <div id="paso-1" class="step-card">
-                            <div class="learning-note">
-                                <strong>👁️ 1. Observación de Fenómenos:</strong>
-                                La ciencia inicia con la curiosidad. Analiza con atención lo que ocurre en el entorno.
-                            </div>
-                            <h3 style="margin:16px 0 10px;">¿Qué fenómeno observas principalmente?</h3>
-                            <div class="quiz-options" id="quiz-obs-options"></div>
-
-                            <div style="margin-top: 15px;">
-                                <label for="input-obs-libre">O describe tu propia observación detallada:</label>
-                                <textarea id="input-obs-libre" placeholder="Describe exactamente lo que ves en la simulación..."></textarea>
+                        <!-- PASO 1: Observación -->
+                        <div class="step-card" data-paso="1">
+                            <div class="definition-box">
+                                <span class="def-icon">👁️</span>
+                                <div>
+                                    <b>¿Qué es la Observación?</b> Es examinar atentamente los fenómenos usando los sentidos o instrumentos de medición para recolectar datos objetivos.
+                                </div>
                             </div>
 
-                            <div class="btn-duo" style="margin-top:20px;">
-                                <div></div>
-                                <button class="primary-btn" onclick="cambiarPaso(2)">Siguiente: Pregunta de Investigación →</button>
+                            <div class="canvas-wrap">
+                                <canvas id="canvas-obs" width="560" height="260"></canvas>
+                            </div>
+
+                            <p class="quiz-question">¿Qué fenómeno clave identificas en este escenario?</p>
+                            <div class="options-group" id="quiz-obs-options"></div>
+
+                            <div style="margin-top:14px;">
+                                <button class="btn-link" onclick="toggleCustomInput('custom-obs-box')">✍️ O escribe tu propia observación detallada</button>
+                                <div id="custom-obs-box" class="hidden" style="margin-top:8px;">
+                                    <textarea id="input-obs-libre" placeholder="Describe exactamente lo que ves en la simulación..."></textarea>
+                                </div>
+                            </div>
+
+                            <div class="btn-duo">
+                                <button class="secondary-btn" onclick="salirDelLaboratorio()">← Salir</button>
+                                <button class="primary-btn" onclick="avanzarPaso(1, 2)">Siguiente: Pregunta Problema →</button>
                             </div>
                         </div>
 
-                        <!-- PASO 2: PLANTEAMIENTO DEL PROBLEMA -->
-                        <div id="paso-2" class="step-card hidden">
-                            <div class="learning-note">
-                                <strong>❓ 2. Planteamiento del Problema:</strong>
-                                Una buena pregunta científica relaciona causa y efecto de manera comprobable.
+                        <!-- PASO 2: Problema -->
+                        <div class="step-card hidden" data-paso="2">
+                            <div class="definition-box">
+                                <span class="def-icon">❓</span>
+                                <div>
+                                    <b>El Problema Científico:</b> Toda ciencia nace con una duda. Estructura una pregunta causal: <i>"¿Cómo afecta X variable a Y resultado?"</i>
+                                </div>
                             </div>
-                            <h3 style="margin:16px 0 10px;">Selecciona la pregunta causal que guiará este experimento:</h3>
-                            <div class="quiz-options" id="quiz-problema-options"></div>
 
-                            <div class="btn-duo" style="margin-top:20px;">
-                                <button class="secondary-btn" onclick="cambiarPaso(1)">← Regresar a Observación</button>
-                                <button class="primary-btn" onclick="cambiarPaso(3)">Siguiente: Construir Hipótesis →</button>
+                            <p class="quiz-question">Selecciona la pregunta de investigación más acertada:</p>
+                            <div class="options-group" id="quiz-problema-options"></div>
+
+                            <div style="margin-top:14px;">
+                                <button class="btn-link" onclick="toggleCustomInput('custom-prob-box')">✍️ O escribe tu propia pregunta personalizada</button>
+                                <div id="custom-prob-box" class="hidden" style="margin-top:8px;">
+                                    <input type="text" id="input-problema-libre" placeholder="¿Cómo influye la variable... en...">
+                                </div>
+                            </div>
+
+                            <div class="btn-duo">
+                                <button class="secondary-btn" onclick="cambiarPaso(1)">← Atrás</button>
+                                <button class="primary-btn" onclick="avanzarPaso(2, 3)">Siguiente: Hipótesis →</button>
                             </div>
                         </div>
 
-                        <!-- PASO 3: HIPÓTESIS -->
-                        <div id="paso-3" class="step-card hidden">
-                            <div class="learning-note">
-                                <strong>💡 3. Construcción de Hipótesis:</strong>
-                                Formula una proposición condicional que pueda validarse o refutarse mediante datos.
+                        <!-- PASO 3: Hipótesis -->
+                        <div class="step-card hidden" data-paso="3">
+                            <div class="definition-box">
+                                <span class="def-icon">💡</span>
+                                <div>
+                                    <b>¿Qué es una Hipótesis?</b> Tu predicción contrastable. Debe establecer una relación condicional ("Si... entonces...").
+                                </div>
                             </div>
-                            <h3 style="margin:16px 0 10px;">Estructura lógica de tu hipótesis:</h3>
+
+                            <p class="quiz-question">Construye tu hipótesis predictiva interactiva:</p>
                             <div class="hypothesis-builder">
-                                <div class="hypo-row">
-                                    <span class="hypo-connector">SI</span>
-                                    <select id="select-hipotesis-condicion" class="hypo-select" onchange="actualizarPreviaHipotesis()">
-                                        <option value="">-- Selecciona la variable modificada --</option>
-                                    </select>
+                                <div class="hb-row">
+                                    <span class="hb-label">SI aplicamos:</span>
+                                    <select id="hb-condicion" class="hb-select" onchange="actualizarPrevisualizacionHipotesis()"></select>
                                 </div>
-                                <div class="hypo-row">
-                                    <span class="hypo-connector">ENTONCES</span>
-                                    <select id="select-hipotesis-efecto" class="hypo-select" onchange="actualizarPreviaHipotesis()">
-                                        <option value="">-- Selecciona el efecto esperado --</option>
-                                    </select>
+                                <div class="hb-row" style="margin-top:10px;">
+                                    <span class="hb-label">ENTONCES:</span>
+                                    <select id="hb-efecto" class="hb-select" onchange="actualizarPrevisualizacionHipotesis()"></select>
                                 </div>
-                                <div class="hypo-preview">
-                                    <b>Tu Hipótesis:</b> <span id="hypo-preview-text">Completa los campos arriba...</span>
-                                </div>
+                                <div class="hb-preview" id="hb-preview-text">"Si aumentamos la fuerza, entonces el movimiento será más veloz."</div>
                             </div>
 
-                            <div class="btn-duo" style="margin-top:20px;">
-                                <button class="secondary-btn" onclick="cambiarPaso(2)">← Regresar al Problema</button>
-                                <button class="primary-btn" onclick="cambiarPaso(4)">Siguiente: Ir al Simulador →</button>
+                            <div class="btn-duo">
+                                <button class="secondary-btn" onclick="cambiarPaso(2)">← Atrás</button>
+                                <button class="primary-btn" onclick="avanzarPaso(3, 4)">¡A Experimentar en el Simulador! →</button>
                             </div>
                         </div>
 
-                        <!-- PASO 4: EXPERIMENTACIÓN INTERACTIVA -->
-                        <div id="paso-4" class="step-card hidden">
-                            <div class="learning-note">
-                                <strong>🎮 4. Experimentación:</strong>
-                                Modifica las variables de control, acciona el simulador y registra mediciones cuantitativas.
-                            </div>
-
-                            <!-- CONTENEDOR DEDICADO DE CANVAS INTERACTIVO -->
-                            <div class="canvas-wrapper-interactive" style="margin: 15px 0;">
-                                <canvas id="simulador-canvas" width="600" height="260"></canvas>
-                            </div>
-
-                            <!-- CONTROLES ESPECÍFICOS DEL SIMULADOR -->
-                            <div class="controls-card" id="sim-controls-container" style="margin-bottom: 20px;"></div>
-
-                            <!-- TABLA DE MEDICIONES EN VIVO DENTRO DEL PASO 4 -->
-                            <div class="live-trials-card" style="margin-top: 15px;">
-                                <div class="flex-between" style="margin-bottom: 8px;">
-                                    <h4 style="margin:0; font-size:15px; color:var(--text);">📋 Tabla de Ensayos Registrados en Vivo</h4>
-                                    <span class="badge-mini" id="badge-contador-ensayos">0 ensayos</span>
-                                </div>
-                                <div class="table-responsive">
-                                    <table class="data-table">
-                                        <thead>
-                                            <tr>
-                                                <th>#</th>
-                                                <th>Parámetro de Entrada</th>
-                                                <th>Respuesta Medida</th>
-                                                <th>Estado</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="tbody-ensayos-paso4">
-                                            <tr>
-                                                <td colspan="4" style="text-align:center; color:var(--muted); padding:10px;">
-                                                    Presiona el botón del simulador para registrar tu primer ensayo.
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                        <!-- PASO 4: Experimentación -->
+                        <div class="step-card hidden" data-paso="4">
+                            <div class="definition-box">
+                                <span class="def-icon">🎮</span>
+                                <div>
+                                    <b>Experimentación:</b> Modifica los parámetros, interactúa con la simulación y ejecuta ensayos. En circuitos eléctricos puedes abrir el taller de montaje en líneas punteadas.
                                 </div>
                             </div>
 
-                            <div class="btn-duo" style="margin-top:20px;">
-                                <button class="secondary-btn" onclick="cambiarPaso(3)">← Regresar a Hipótesis</button>
-                                <button class="primary-btn" onclick="cambiarPaso(5)">Siguiente: Análisis de Datos →</button>
+                            <!-- Botón para reabrir el taller de circuitos si el experimento es de circuitos -->
+                            <div id="btn-reopen-circuit-box" class="hidden" style="margin-bottom:14px;">
+                                <button class="secondary-btn" style="width:100%; border:1px dashed var(--cyan); color:var(--cyan);" onclick="abrirConstructorCircuito()">
+                                    🔌 Abrir Taller de Ensamblaje de Circuitos (Líneas Punteadas)
+                                </button>
+                            </div>
+
+                            <div class="canvas-wrap">
+                                <canvas id="canvas-exp" width="560" height="260"></canvas>
+                            </div>
+
+                            <div id="sim-controls-container" class="controls-card"></div>
+
+                            <!-- TABLA EN VIVO DE ENSAYOS REGISTRADOS EN PASO 4 -->
+                            <div class="table-card" style="margin-top:16px;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                                    <span style="font-weight:700; color:var(--cyan); font-size:14px;">📋 Ensayos Registrados en Vivo:</span>
+                                    <span id="badge-contador-ensayos" class="pill">0 ensayos</span>
+                                </div>
+                                <table class="neon-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Ensayo #</th>
+                                            <th>Parámetro Principal</th>
+                                            <th>Respuesta Medida</th>
+                                            <th>Estado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody-ensayos-paso4">
+                                        <tr><td colspan="4" style="text-align:center; color:var(--muted); padding:10px;">Presiona el botón del simulador para registrar tu primer ensayo.</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div id="sensor-btn-box" class="sensor-container hidden">
+                                <button class="secondary-btn" onclick="activarAcelerometroMovil()">📲 Usar sensor de inclinación de mi celular</button>
+                            </div>
+
+                            <div class="btn-duo" style="margin-top:15px;">
+                                <button class="secondary-btn" onclick="cambiarPaso(3)">← Atrás</button>
+                                <button class="primary-btn" onclick="cambiarPaso(5)">Ver Tabla de Datos →</button>
                             </div>
                         </div>
 
-                        <!-- PASO 5: ANÁLISIS DE MEDICIONES -->
-                        <div id="paso-5" class="step-card hidden">
-                            <div class="learning-note">
-                                <strong>📊 5. Análisis de Mediciones:</strong>
-                                Los números no mienten. Examina los registros obtenidos en los ensayos.
+                        <!-- PASO 5: Análisis -->
+                        <div class="step-card hidden" data-paso="5">
+                            <div class="definition-box">
+                                <span class="def-icon">📊</span>
+                                <div>
+                                    <b>Análisis de Datos:</b> Los números no mienten. Examina los registros obtenidos en los ensayos.
+                                </div>
                             </div>
 
-                            <div class="table-responsive" style="margin:16px 0;">
-                                <table class="data-table">
+                            <div class="table-card">
+                                <table class="neon-table" id="tabla-datos-exp">
                                     <thead>
                                         <tr>
                                             <th>Ensayo #</th>
@@ -809,63 +768,65 @@
                                         </tr>
                                     </thead>
                                     <tbody id="tbody-ensayos">
-                                        <tr>
-                                            <td colspan="4" style="text-align:center; color:var(--muted);">
-                                                Realiza ensayos en el Paso 4 para ver datos aquí.
-                                            </td>
-                                        </tr>
+                                        <tr><td colspan="4" style="text-align:center; color:var(--muted);">Realiza ensayos en el Paso 4 para ver datos aquí.</td></tr>
                                     </tbody>
                                 </table>
                             </div>
 
-                            <h3 style="margin:16px 0 10px;">¿Qué tendencia o patrón se observa claramente en las mediciones?</h3>
-                            <div class="quiz-options" id="quiz-analisis-options"></div>
+                            <p class="quiz-question">¿Qué tendencia o patrón se observa claramente en las mediciones?</p>
+                            <div class="options-group" id="quiz-analisis-options"></div>
 
-                            <div class="btn-duo" style="margin-top:20px;">
+                            <div class="btn-duo">
                                 <button class="secondary-btn" onclick="cambiarPaso(4)">← Regresar al Simulador</button>
-                                <button class="primary-btn" onclick="cambiarPaso(6)">Siguiente: Conclusiones →</button>
+                                <button class="primary-btn" onclick="avanzarPaso(5, 6)">Siguiente: Conclusiones →</button>
                             </div>
                         </div>
 
-                        <!-- PASO 6: CONCLUSIÓN -->
-                        <div id="paso-6" class="step-card hidden">
-                            <div class="learning-note">
-                                <strong>🔍 6. Conclusiones y Epistemología:</strong>
-                                Contrasta la evidencia experimental con tu hipótesis inicial.
+                        <!-- PASO 6: Conclusión -->
+                        <div class="step-card hidden" data-paso="6">
+                            <div class="definition-box">
+                                <span class="def-icon">🎯</span>
+                                <div>
+                                    <b>Conclusión Científica:</b> ¿Tu hipótesis inicial fue confirmada o refutada por los datos?
+                                </div>
                             </div>
 
-                            <div class="recap-box" style="margin: 15px 0;">
-                                <strong>Recordatorio de tu Hipótesis formulada en el Paso 3:</strong>
-                                <p id="recap-hipotesis-text" style="color:var(--cyan); margin-top:4px; font-weight:700;">No formulada</p>
+                            <div class="hipotesis-reminder">
+                                Tu hipótesis fue: <b id="txt-recordatorio-hip" style="color:var(--cyan);">"Si..."</b>
                             </div>
 
-                            <h3 style="margin:16px 0 10px;">A la luz de los datos obtenidos en los ensayos:</h3>
-                            <div class="quiz-options" id="quiz-conclusion-options"></div>
+                            <p class="quiz-question">¿Cuál es el veredicto científico final?</p>
+                            <div class="options-group" id="quiz-conclusion-options"></div>
 
-                            <div style="margin-top: 15px;">
-                                <label for="input-conclusion-libre">O redacta tu propia conclusión fundamentada:</label>
-                                <textarea id="input-conclusion-libre" placeholder="Concluyo que mi hipótesis fue... debido a que las mediciones demostraron..."></textarea>
+                            <div style="margin-top:14px;">
+                                <button class="btn-link" onclick="toggleCustomInput('custom-conc-box')">✍️ O redacta tu conclusión personalizada</button>
+                                <div id="custom-conc-box" class="hidden" style="margin-top:8px;">
+                                    <textarea id="input-conclusion-libre" placeholder="Concluyo que mi hipótesis fue... debido a que las mediciones demostraron..."></textarea>
+                                </div>
                             </div>
+
+                            <div class="btn-duo">
+                                <button class="secondary-btn" onclick="cambiarPaso(5)">← Atrás</button>
+                                <button class="primary-btn" onclick="avanzarPaso(6, 7)">Siguiente: Divulgación →</button>
+                            </div>
+                        </div>
+
+                        <!-- PASO 7: Divulgación -->
+                        <div class="step-card hidden" data-paso="7">
+                            <div class="definition-box">
+                                <span class="def-icon">📢</span>
+                                <div>
+                                    <b>Divulgación Científica:</b> Comunicar la ciencia es tan vital como descubrirla. Escoge un titular de impacto para tu reporte.
+                                </div>
+                            </div>
+
+                            <p class="quiz-question">¿Cómo titularías el informe de tu investigación?</p>
+                            <div class="options-group" id="quiz-comunicacion-options"></div>
 
                             <div class="btn-duo" style="margin-top:20px;">
-                                <button class="secondary-btn" onclick="cambiarPaso(5)">← Regresar al Análisis</button>
-                                <button class="primary-btn" onclick="cambiarPaso(7)">Siguiente: Divulgación →</button>
-                            </div>
-                        </div>
-
-                        <!-- PASO 7: COMUNICACIÓN Y DIVULGACIÓN -->
-                        <div id="paso-7" class="step-card hidden">
-                            <div class="learning-note">
-                                <strong>📢 7. Comunicación de Hallazgos:</strong>
-                                El conocimiento científico debe compartirse con claridad con la comunidad.
-                            </div>
-                            <h3 style="margin:16px 0 10px;">Selecciona el titular científico para tu informe:</h3>
-                            <div class="quiz-options" id="quiz-comunicacion-options"></div>
-
-                            <div class="btn-duo" style="margin-top:24px;">
-                                <button class="secondary-btn" onclick="cambiarPaso(6)">← Regresar a Conclusión</button>
-                                <button class="primary-btn pulse-glow-btn" onclick="ejecutarEvaluacionFinal()">
-                                    🤖 Finalizar y Evaluar con IA →
+                                <button class="secondary-btn" onclick="cambiarPaso(6)">← Atrás</button>
+                                <button class="primary-btn btn-action" onclick="ejecutarEvaluacionFinal()" style="background: linear-gradient(100deg, #ec4899, #8b5cf6);">
+                                    🚀 Entregar a la IA para Evaluación
                                 </button>
                             </div>
                         </div>
@@ -960,20 +921,6 @@
                             <p>Aciertos en evaluaciones</p>
                         </div>
                     </div>
-                    <div class="progress-card">
-                        <span>🚀</span>
-                        <div>
-                            <h2 id="completedMissionsCount">0 / 18</h2>
-                            <p>Misiones científicas aprobadas</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="subject-card wide-card" style="margin-bottom: 20px;">
-                    <h3 style="margin-bottom:12px;">🏆 Misiones Científicas Completadas</h3>
-                    <div id="completedMissionsList">
-                        <p style="color:var(--muted); font-size:14px;">Completa los 7 pasos de cualquier misión para ver tu dictamen y rango aquí.</p>
-                    </div>
                 </div>
 
                 <div class="subject-card wide-card">
@@ -989,34 +936,54 @@
                 <div class="section-intro">
                     <span class="tag">INTELIGENCIA ARTIFICIAL</span>
                     <h1>🤖 Asistente Científico NEXOR-IA</h1>
-                    <p>Pregúntale lo que quieras sobre fórmulas, física, química, biología o el método científico.</p>
+                    <p>Pregunta sobre fórmulas, mezclas, células, método científico o pide explicaciones.</p>
                 </div>
 
                 <div class="chat-card">
                     <div class="chat-header">
                         <div class="robot-icon">🤖</div>
                         <div>
-                            <strong>NEXOR-IA Educativo</strong>
-                            <small>Tutor científico activo • Respuesta instantánea</small>
+                            <strong>NEXOR-IA</strong>
+                            <small>Tutor interactivo de ciencias</small>
                         </div>
+                        <span class="online-dot" title="En línea"></span>
                     </div>
 
                     <div id="chatMessages" class="chat-messages">
                         <div class="message bot-message">
-                            ¡Hola! Soy NEXOR-IA, tu tutor científico escolar. Puedo ayudarte a formular hipótesis, calcular fórmulas (como velocidad, fuerza o la Ley de Ohm), resolver misiones o explicarte conceptos de Física, Química y Biología. ¿Qué deseas explorar hoy?
+                            ¡Hola! Soy <strong>NEXOR-IA</strong>, tu asistente del laboratorio. Puedes preguntarme sobre velocidad, la ley de Ohm, fotosíntesis, el método científico en 7 pasos o cualquier experimento. ¿En qué te puedo ayudar hoy?
                         </div>
                     </div>
 
                     <form id="chatForm" class="chat-form">
-                        <input type="text" id="chatInput" placeholder="Escribe tu duda científica aquí... (ej. ¿Cómo calculo la Ley de Ohm?)" required autocomplete="off">
-                        <button type="submit" class="primary-btn">Preguntar 🚀</button>
+                        <input id="chatInput" type="text" placeholder="Escribe tu duda científica aquí..." required autocomplete="off">
+                        <button type="submit">Enviar</button>
                     </form>
+
+                    <small class="demo-note">
+                        💡 Prueba preguntando: "¿Cómo se calcula la velocidad?", "¿Qué es la ley de Ohm?", "¿Cómo formular una hipótesis?", o "¿Qué pasa en la fotosíntesis?".
+                    </small>
                 </div>
             </section>
+
+            <!-- FOOTER -->
+            <footer>
+                <p>NEXORA LAB © 2026 • Plataforma de aprendizaje interactivo de ciencias para Secundaria y Preparatoria.</p>
+            </footer>
+
         </main>
     </div>
 
-    <!-- SCRIPT PRINCIPAL NATIVO -->
+    <!-- SCRIPT PRINCIPAL -->
     <script src="app.js"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('Service Worker registrado con éxito:', reg.scope))
+            .catch(err => console.warn('Fallo al registrar el Service Worker:', err));
+        });
+      }
+    </script>
 </body>
-</html>
+</html> 
