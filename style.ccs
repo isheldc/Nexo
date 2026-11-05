@@ -1,54 +1,74 @@
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
 
+/* ==========================================================================
+   VARIABLES Y TEMAS (DARK / LIGHT)
+   ========================================================================== */
 :root {
-    --background: #081426;
-    --panel: #101f36;
-    --panel-light: #172a45;
-    --cyan: #24d9f2;
-    --purple: #9b7bff;
-    --pink: #ff70b7;
-    --green: #54e6a5;
-    --amber: #f59e0b;
-    --text: #f3f7ff;
-    --muted: #a9b8ce;
-    --border: rgba(255, 255, 255, 0.09);
-    --input-bg: #09182b;
+    --bg-dark: #0a0e14;
+    --card-bg: #111822;
+    --card-border: #1e293b;
+    --level-card-bg: #131c28;
+    --level-card-border: #233246;
     --box-inner-bg: #0d1520;
-    --level-card-bg: #101f36;
-    --level-card-border: #1e293b;
+    --input-bg: #0a0f16;
+    --neon-blue: #00e5ff;
+    --neon-purple: #a855f7;
+    --neon-green: #10b981;
+    --neon-amber: #f59e0b;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --font: 'Nunito', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    
+    /* Alias de compatibilidad */
+    --background: var(--bg-dark);
+    --panel: var(--card-bg);
+    --panel-light: var(--level-card-bg);
+    --cyan: var(--neon-blue);
+    --purple: var(--neon-purple);
+    --green: var(--neon-green);
+    --border: var(--card-border);
 }
 
+/* PALETA PARA MODO CLARO */
 [data-theme="light"] {
-    --background: #f0f4fa;
-    --panel: #ffffff;
-    --panel-light: #f5f8fc;
-    --cyan: #0284c7;
-    --purple: #7c3aed;
-    --pink: #db2777;
-    --green: #059669;
-    --amber: #d97706;
-    --text: #0f172a;
-    --muted: #64748b;
-    --border: rgba(0, 0, 0, 0.1);
-    --input-bg: #f8fafc;
-    --box-inner-bg: #f1f5f9;
-    --level-card-bg: #ffffff;
+    --bg-dark: #f1f5f9;
+    --card-bg: #ffffff;
+    --card-border: #cbd5e1;
+    --level-card-bg: #f8fafc;
     --level-card-border: #e2e8f0;
+    --box-inner-bg: #f1f5f9;
+    --input-bg: #ffffff;
+    --neon-blue: #0284c7;
+    --neon-purple: #7e22ce;
+    --neon-green: #059669;
+    --neon-amber: #d97706;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+
+    --background: var(--bg-dark);
+    --panel: var(--card-bg);
+    --panel-light: var(--level-card-bg);
+    --cyan: var(--neon-blue);
+    --purple: var(--neon-purple);
+    --green: var(--neon-green);
+    --border: var(--card-border);
 }
 
+/* ==========================================================================
+   RESET Y REGLAS GENERALES
+   ========================================================================== */
 * {
+    box-sizing: border-box;
     margin: 0;
     padding: 0;
-    box-sizing: border-box;
 }
 
 body {
-    background: var(--background);
-    color: var(--text);
-    font-family: 'Nunito', system-ui, -apple-system, sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    font-family: var(--font);
     min-height: 100vh;
-    transition: background-color .25s ease, color .25s ease;
-    overflow-x: hidden;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 button, input, select, textarea {
@@ -58,474 +78,89 @@ button, input, select, textarea {
 button {
     cursor: pointer;
     border: none;
-    background: none;
-    color: inherit;
+    transition: all 0.2s ease;
 }
 
-input, select, textarea {
-    outline: none;
-    border: none;
-    color: var(--text);
+button:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.1);
 }
 
+.hidden { 
+    display: none !important; 
+}
+
+/* ==========================================================================
+   PANTALLA DE ACCESO (LOGIN)
+   ========================================================================== */
 .login-screen {
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: radial-gradient(circle at top right, rgba(36, 217, 242, 0.15), transparent 40%),
-                radial-gradient(circle at bottom left, rgba(155, 123, 255, 0.15), transparent 40%),
-                var(--background);
     padding: 20px;
+    background:
+        radial-gradient(circle at 15% 20%, rgba(0, 229, 255, 0.15) 0, transparent 35%),
+        radial-gradient(circle at 85% 80%, rgba(168, 85, 247, 0.15) 0, transparent 35%),
+        var(--bg-dark);
 }
 
 .login-card {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 24px;
-    padding: 40px;
     width: 100%;
-    max-width: 440px;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    max-width: 420px;
+    background: var(--card-bg);
+    padding: 40px;
+    border: 1px solid var(--card-border);
+    border-radius: 24px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
     text-align: center;
-    animation: fadeIn .4s ease-out;
 }
 
 .logo {
-    font-size: 52px;
-    margin-bottom: 8px;
-    filter: drop-shadow(0 0 16px rgba(36, 217, 242, 0.4));
+    font-size: 50px;
+    margin-bottom: 10px;
+    filter: drop-shadow(0 0 12px var(--neon-blue));
 }
 
 .login-card h1 {
-    font-size: 28px;
+    font-size: 1.8rem;
     font-weight: 900;
-    margin-bottom: 6px;
-    letter-spacing: -0.5px;
 }
 
 .login-card h1 span {
-    color: var(--cyan);
+    color: var(--neon-blue);
 }
 
-.login-card p {
-    color: var(--muted);
-    font-size: 14px;
-    margin-bottom: 24px;
+.login-card > p {
+    color: var(--text-muted);
+    margin: 8px 0 25px;
+    font-size: 0.9rem;
+    line-height: 1.4;
 }
 
 .login-card form {
     text-align: left;
 }
 
-.login-card label {
+label {
     display: block;
-    font-size: 13px;
+    color: var(--text-muted);
     font-weight: 700;
-    color: var(--muted);
-    margin-bottom: 6px;
-    margin-top: 14px;
+    margin: 12px 0 6px;
+    font-size: 0.85rem;
 }
 
-.login-card input {
-    width: 100%;
-    background: var(--input-bg);
-    border: 1px solid var(--border);
-    padding: 12px 16px;
-    border-radius: 12px;
-    color: var(--text);
-    font-size: 14px;
-    transition: border-color .2s;
-}
-
-.login-card input:focus {
-    border-color: var(--cyan);
-}
-
-.primary-btn {
-    background: linear-gradient(135deg, var(--cyan), #1b9cfc);
-    color: #04101e;
-    font-weight: 800;
-    padding: 12px 24px;
-    border-radius: 12px;
-    font-size: 14px;
-    transition: all .2s;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-}
-
-.primary-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(36, 217, 242, 0.4);
-}
-
-.quick-access-btn {
-    width: 100%;
-    background: rgba(36, 217, 242, 0.08);
-    border: 1px dashed var(--cyan);
-    color: var(--cyan);
-    font-weight: 700;
-    padding: 10px;
-    border-radius: 12px;
-    font-size: 13px;
-    margin-top: 14px;
-    transition: all .2s;
-}
-
-.quick-access-btn:hover {
-    background: rgba(36, 217, 242, 0.15);
-}
-
-.login-card small {
-    display: block;
-    color: var(--muted);
-    font-size: 11px;
-    margin-top: 14px;
-}
-
+/* ==========================================================================
+   ESTRUCTURA APP CON SIDEBAR Y CONTENIDO PRINCIPAL
+   ========================================================================== */
 .app {
     display: flex;
     min-height: 100vh;
 }
 
 .sidebar {
-    width: 260px;
-    background: #060e1a;
-    border-right: 1px solid var(--border);
-    padding: 24px 16px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+    width: 250px;
     flex-shrink: 0;
-}
-
-.brand {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 0 8px 24px;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 20px;
-}
-
-.brand-icon {
-    font-size: 28px;
-}
-
-.brand h2 {
-    font-size: 18px;
-    font-weight: 900;
-    letter-spacing: -0.5px;
-}
-
-.brand h2 span {
-    color: var(--cyan);
-}
-
-.brand small {
-    display: block;
-    color: var(--cyan);
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.nav-item {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 14px;
-    border-radius: 12px;
-    color: var(--muted);
-    font-weight: 700;
-    font-size: 14px;
-    margin-bottom: 6px;
-    transition: all .2s;
-    text-align: left;
-}
-
-.nav-item:hover {
-    color: var(--text);
-    background: rgba(255, 255, 255, 0.04);
-}
-
-.nav-item.active {
-    background: rgba(36, 217, 242, 0.15);
-    color: var(--cyan);
-}
-
-.nav-icon {
-    font-size: 18px;
-}
-
-.sidebar-footer {
-    border-top: 1px solid var(--border);
-    padding-top: 16px;
-}
-
-.sidebar-footer p {
-    font-size: 12px;
-    color: var(--muted);
-    font-style: italic;
-    margin-bottom: 12px;
-    text-align: center;
-}
-
-.logout-btn {
-    width: 100%;
-    padding: 10px;
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.05);
-    color: var(--muted);
-    font-size: 13px;
-    font-weight: 700;
-    transition: all .2s;
-}
-
-.logout-btn:hover {
-    background: rgba(255, 112, 183, 0.15);
-    color: var(--pink);
-}
-
-.main-content {
-    flex: 1;
-    padding: 32px 40px;
-    overflow-y: auto;
-    max-width: 1400px;
-    margin: 0 auto;
-}
-
-.topbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 28px;
-}
-
-.topbar h1 {
-    font-size: 24px;
-    font-weight: 900;
-    letter-spacing: -0.5px;
-}
-
-.topbar p {
-    color: var(--muted);
-    font-size: 14px;
-    margin-top: 4px;
-}
-
-.user-pill {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    padding: 8px 16px;
-    border-radius: 20px;
-}
-
-.status-dot {
-    width: 8px;
-    height: 8px;
-    background: var(--green);
-    border-radius: 50%;
-    display: inline-block;
-    box-shadow: 0 0 8px var(--green);
-}
-
-.student-badge {
-    font-weight: 800;
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.btn-icon {
-    font-size: 16px;
-    padding: 6px;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.05);
-    transition: background .2s;
-}
-
-.btn-icon:hover {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.hero-banner {
-    background: linear-gradient(135deg, #102340 0%, #1f1b40 100%);
-    border: 1px solid rgba(36, 217, 242, 0.2);
-    border-radius: 24px;
-    padding: 36px 40px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 36px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-    position: relative;
-    overflow: hidden;
-}
-
-.hero-banner::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    right: -20%;
-    width: 400px;
-    height: 400px;
-    background: radial-gradient(circle, rgba(36, 217, 242, 0.15) 0%, transparent 70%);
-    pointer-events: none;
-}
-
-.hero-badge {
-    display: inline-block;
-    background: rgba(36, 217, 242, 0.15);
-    color: var(--cyan);
-    font-size: 11px;
-    font-weight: 800;
-    padding: 6px 12px;
-    border-radius: 20px;
-    letter-spacing: 0.8px;
-    margin-bottom: 12px;
-}
-
-.hero-text h2 {
-    font-size: 32px;
-    font-weight: 900;
-    margin-bottom: 10px;
-    letter-spacing: -0.5px;
-}
-
-.hero-text h2 span {
-    color: var(--cyan);
-}
-
-.hero-text p {
-    color: var(--muted);
-    max-width: 520px;
-    font-size: 15px;
-    line-height: 1.5;
-    margin-bottom: 22px;
-}
-
-.hero-illustration {
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.section-title {
-    font-size: 20px;
-    font-weight: 900;
-    margin-bottom: 18px;
-    letter-spacing: -0.5px;
-}
-
-.cards-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 20px;
-    margin-bottom: 36px;
-}
-
-.lab-card {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 24px;
-    position: relative;
-    overflow: hidden;
-    transition: transform .2s, border-color .2s;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-}
-
-.lab-card:hover {
-    transform: translateY(-4px);
-    border-color: rgba(255, 255, 255, 0.2);
-}
-
-.lab-card.fisica {
-    border-top: 4px solid #ff9f43;
-}
-
-.lab-card.quimica {
-    border-top: 4px solid var(--cyan);
-}
-
-.lab-card.biologia {
-    border-top: 4px solid var(--pink);
-}
-
-.card-icon {
-    font-size: 32px;
-    margin-bottom: 14px;
-}
-
-.lab-card h3 {
-    font-size: 18px;
-    font-weight: 800;
-    margin-bottom: 6px;
-}
-
-.lab-card p {
-    color: var(--muted);
-    font-size: 13px;
-    line-height: 1.5;
-    margin-bottom: 18px;
-}
-
-.card-btn {
-    width: 100%;
-    padding: 10px;
-    border-radius: 10px;
-    background: rgba(36, 217, 242, 0.1);
-    color: var(--cyan);
-    font-weight: 700;
-    font-size: 13px;
-    transition: background .2s;
-}
-
-.card-btn:hover {
-    background: var(--cyan);
-    color: #04101e;
-}
-
-.panel-box {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 24px;
-    margin-bottom: 24px;
-}
-
-.hidden {
-    display: none !important;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-@media (max-width: 900px) {
-    .app {
-        flex-direction: column;
-    }
-    .sidebar {
-        width: 100%;
-        border-right: none;
-        border-bottom: 1px solid var(--border);
-    }
-    .hero-banner {
-        flex-direction: column;
-        text-align: center;
-    }
-} 
+    background: var(--card-bg);
+    border-right: 1px solid var(--card-border);
+    padding:
