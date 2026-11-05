@@ -53,9 +53,15 @@ self.addEventListener('fetch', event => {
         }
         return response;
       }).catch(() => {
+        // Si es una navegación (entrar a la app), devolvemos el index.html en caché
         if (event.request.mode === 'navigate') {
           return caches.match('./index.html');
         }
+        // Para cualquier otro recurso que falle offline, evitamos devolver undefined
+        return new Response('Network error happened', {
+          status: 408,
+          headers: { 'Content-Type': 'text/plain' }
+        });
       });
     })
   );
