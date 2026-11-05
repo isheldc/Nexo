@@ -9,6 +9,7 @@ let student = localStorage.getItem("nexoraStudent") || "";
 let experiments = Number(localStorage.getItem("nexoraExperiments") || 0);
 let correctAnswers = Number(localStorage.getItem("nexoraCorrect") || 0);
 let history = JSON.parse(localStorage.getItem("nexoraHistory") || "[]");
+let completedMissions = JSON.parse(localStorage.getItem("nexoraCompletedMissions") || "{}");
 
 // --- ESTADO PARA LAS MISIONES DE 7 PASOS ---
 let nivelActual = "Secundaria";
@@ -730,6 +731,7 @@ function saveProgress() {
     localStorage.setItem("nexoraExperiments", experiments);
     localStorage.setItem("nexoraCorrect", correctAnswers);
     localStorage.setItem("nexoraHistory", JSON.stringify(history));
+    localStorage.setItem("nexoraCompletedMissions", JSON.stringify(completedMissions));
     updateProgress();
 }
 
@@ -739,21 +741,48 @@ function addActivity(description) {
         date: new Date().toLocaleString("es-MX")
     });
 
-    history = history.slice(0, 25);
+    history = history.slice(0, 30);
     saveProgress();
 }
 
 function updateProgress() {
-    const expCountEl = $("experimentCount");
-    const quizScoreEl = $("quizScore");
+    const expCountEl = $("totalExperiments") || $("experimentCount");
+    const quizScoreEl = $("correctAnswersDisplay") || $("quizScore");
     if (expCountEl) expCountEl.textContent = experiments;
     if (quizScoreEl) quizScoreEl.textContent = correctAnswers;
 
-    const container = $("activityHistory");
+    const missionsCountEl = $("completedMissionsCount");
+    const completedList = Object.values(completedMissions);
+    if (missionsCountEl) {
+        missionsCountEl.textContent = `${completedList.length} / 18`;
+    }
+
+    const missionsContainer = $("completedMissionsList");
+    if (missionsContainer) {
+        if (completedList.length === 0) {
+            missionsContainer.innerHTML = `<p style="color:var(--muted); font-size:14px;">Completa los 7 pasos de cualquier misión para ver tu dictamen y rango aquí.</p>`;
+        } else {
+            missionsContainer.innerHTML = `<div class="completed-missions-container">` +
+                completedList.map(m => `
+                    <div class="completed-mission-card">
+                        <div>
+                            <strong>${escapeHTML(m.titulo)}</strong>
+                            <small>${escapeHTML(m.materia)} • Nivel: ${escapeHTML(m.nivel)} • ${escapeHTML(m.fecha)}</small>
+                        </div>
+                        <div style="text-align:right;">
+                            <span class="badge-completado">✔ ${m.puntaje} / 100 PTS</span>
+                            <div style="font-size:11.5px; color:var(--cyan); margin-top:3px; font-weight:700;">${escapeHTML(m.rango)}</div>
+                        </div>
+                    </div>
+                `).join("") + `</div>`;
+        }
+    }
+
+    const container = $("historyList") || $("activityHistory");
     if (!container) return;
 
     if (history.length === 0) {
-        container.textContent = "Todavía no tienes actividades registradas.";
+        container.innerHTML = `<p style="color:var(--muted); font-size:14px;">Todavía no tienes actividades registradas.</p>`;
         return;
     }
 
@@ -963,21 +992,25 @@ function renderizarListaMisiones(materia, contenedor) {
     const misiones = (dbExperimentos[nivelActual] && dbExperimentos[nivelActual][materia]) || [];
     misiones.forEach(exp => {
         const item = document.createElement("div");
-        item.className = "exp-item";
+        const mId = exp.id || exp.titulo;
+        const rec = completedMissions[mId];
+
+        item.className = `exp-item ${rec ? 'completada' : ''}`;
 
         const badgeDiff = (exp.simTipo === "circuito" || exp.simTipo === "tiro" || exp.simTipo === "genetica") ? "alta" : "media";
         const diffText = badgeDiff === "alta" ? "Avanzado" : "Intermedio";
 
         item.innerHTML = `
             <div class="exp-item-content">
-                <div style="display:flex; align-items:center; gap:8px; margin-bottom:5px;">
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:5px; flex-wrap:wrap;">
                     <span class="badge-dificultad ${badgeDiff}">${diffText}</span>
+                    ${rec ? `<span class="badge-completado">✔ Completada (${rec.puntaje}/100 pts)</span>` : ''}
                     <h4 style="margin:0; font-size:16px;">${exp.titulo}</h4>
                 </div>
                 <p style="margin:0; font-size:13.5px; color:var(--muted);">${exp.desc}</p>
             </div>
-            <button class="primary-btn" style="padding:9px 16px; font-size:13px; white-space:nowrap;">
-                Iniciar Misión 🚀
+            <button class="${rec ? 'secondary-btn' : 'primary-btn'}" style="padding:9px 16px; font-size:13px; white-space:nowrap; ${rec ? 'border-color:var(--green); color:var(--green); font-weight:700;' : ''}">
+                ${rec ? 'Revisar / Repetir 🔄' : 'Iniciar Misión 🚀'}
             </button>
         `;
         item.onclick = () => {
@@ -1854,8 +1887,8 @@ async function ejecutarEvaluacionFinal() {
     if (loader) loader.classList.remove("hidden");
     if (content) content.classList.add("hidden");
 
-    const obsInput = $("input-obs-extra");
-    const concInput = $("input-conclusion-texto");
+    const obsInput = $("input-obs-libre") || $("input-obs-extra");
+    const concInput = $("input-conclusion-libre") || $("input-conclusion-texto");
     userSession.observacionLibre = obsInput ? obsInput.value.trim() : "";
     userSession.conclusionTexto = concInput ? concInput.value.trim() : "";
 
@@ -1868,11 +1901,11 @@ async function ejecutarEvaluacionFinal() {
             dictamen = await consultarIAGlobalGemini(apiKey);
         } catch (err) {
             console.warn("Fallo nube, conmutando a IA Local Heurística:", err);
-            if (motorTag) motorTag.innerText = "IA Local Autónoma (Offline)";
+            if (motorTag) motorTag.innerText = "IA Local Pedagógica";
             dictamen = evaluarConIALocalAdaptada();
         }
     } else {
-        if (motorTag) motorTag.innerText = "IA Local Autónoma (Offline)";
+        if (motorTag) motorTag.innerText = "IA Local Pedagógica";
         dictamen = evaluarConIALocalAdaptada();
     }
 
@@ -1919,57 +1952,171 @@ async function ejecutarEvaluacionFinal() {
         content.classList.remove("hidden");
     }
 
+    // Guardado persistente de la misión completada
+    const mId = (expActual && (expActual.id || expActual.titulo)) || "mision_activa";
+    const rangoNombre = dictamen.puntaje >= 90 ? "Maestro Científico" : dictamen.puntaje >= 75 ? "Investigador Cuántico" : "Explorador Novato";
+
+    completedMissions[mId] = {
+        id: mId,
+        titulo: expActual ? expActual.titulo : "Misión Científica",
+        materia: materiaActual,
+        nivel: nivelActual,
+        puntaje: dictamen.puntaje,
+        rango: rangoNombre,
+        fecha: new Date().toLocaleDateString("es-MX", { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+        ensayos: (userSession.ensayos && userSession.ensayos.length) || 0
+    };
+
     experiments++;
-    addActivity(`Evaluación IA completada: ${expActual ? expActual.titulo : "Misión"} (${dictamen.puntaje} pts)`);
+    addActivity(`Evaluación IA: ${expActual ? expActual.titulo : "Misión"} (${dictamen.puntaje}/100 pts - ${rangoNombre})`);
+    saveProgress();
 }
 
 function evaluarConIALocalAdaptada() {
     let score = 0;
     let rubrica = [];
 
-    if (userSession.observacionSeleccionada) {
+    // Paso 1: Observación (15 pts)
+    const tieneObs = Boolean(userSession.observacionSeleccionada || (userSession.observacionLibre && userSession.observacionLibre.length >= 3));
+    if (tieneObs) {
         score += 15;
-        rubrica.push({ paso: "1. Observación", aprobado: true, mensaje: "Identificaste el fenómeno físico con precisión visual." });
+        const textoObs = userSession.observacionSeleccionada || userSession.observacionLibre;
+        rubrica.push({
+            paso: "1. Observación",
+            aprobado: true,
+            mensaje: `Identificaste el fenómeno físico-químico con precisión: "${textoObs.length > 55 ? textoObs.substring(0, 52) + '...' : textoObs}".`
+        });
     } else {
-        rubrica.push({ paso: "1. Observación", aprobado: false, mensaje: "No seleccionaste ninguna observación concreta." });
+        rubrica.push({
+            paso: "1. Observación",
+            aprobado: false,
+            mensaje: "No seleccionaste ni redactaste ninguna observación del fenómeno inicial."
+        });
     }
 
+    // Paso 2: Planteamiento del Problema (15 pts)
     if (userSession.problemaSeleccionado) {
         score += 15;
-        rubrica.push({ paso: "2. Planteamiento", aprobado: true, mensaje: "Formulaste una pregunta con relación causal de variables." });
+        rubrica.push({
+            paso: "2. Planteamiento",
+            aprobado: true,
+            mensaje: `Formulaste una pregunta de investigación comprobable: "${userSession.problemaSeleccionado}".`
+        });
+    } else {
+        rubrica.push({
+            paso: "2. Planteamiento",
+            aprobado: false,
+            mensaje: "Faltó seleccionar la pregunta causal en el Paso 2."
+        });
     }
 
+    // Paso 3: Hipótesis Científica (15 pts)
     if (userSession.hipotesisCondicion && userSession.hipotesisEfecto) {
-        score += 20;
-        rubrica.push({ paso: "3. Hipótesis", aprobado: true, mensaje: `Excelente construcción lógica: 'Si ${userSession.hipotesisCondicion}, entonces ${userSession.hipotesisEfecto}'.` });
+        score += 15;
+        rubrica.push({
+            paso: "3. Hipótesis",
+            aprobado: true,
+            mensaje: `Estructura hipotética impecable: "Si ${userSession.hipotesisCondicion}, entonces ${userSession.hipotesisEfecto}".`
+        });
+    } else {
+        rubrica.push({
+            paso: "3. Hipótesis",
+            aprobado: false,
+            mensaje: "No completaste los campos condicionales de la hipótesis en el Paso 3."
+        });
     }
 
-    if (userSession.ensayos.length >= 2) {
+    // Paso 4: Experimentación y Ensayos Controlados (20 pts)
+    const cantEnsayos = (userSession.ensayos && userSession.ensayos.length) || 0;
+    if (cantEnsayos >= 2) {
         score += 20;
-        rubrica.push({ paso: "4. Experimentación", aprobado: true, mensaje: `Rigor científico: ejecutaste ${userSession.ensayos.length} pruebas controladas en el simulador.` });
+        rubrica.push({
+            paso: "4. Experimentación",
+            aprobado: true,
+            mensaje: `Rigor científico comprobado: realizaste ${cantEnsayos} mediciones controladas en el simulador.`
+        });
+    } else if (cantEnsayos === 1) {
+        score += 10;
+        rubrica.push({
+            paso: "4. Experimentación",
+            aprobado: false,
+            mensaje: "Realizaste 1 ensayo. La ciencia exige repeticiones para verificar consistencia estadística."
+        });
+    } else {
+        rubrica.push({
+            paso: "4. Experimentación",
+            aprobado: false,
+            mensaje: "No registraste ensayos experimentales en el simulador interactivo."
+        });
+    }
+
+    // Paso 5: Análisis de Mediciones (15 pts)
+    if (userSession.analisisSeleccionado) {
+        score += 15;
+        rubrica.push({
+            paso: "5. Análisis de Datos",
+            aprobado: true,
+            mensaje: `Identificaste con acierto la tendencia y el patrón en las mediciones: "${userSession.analisisSeleccionado}".`
+        });
     } else {
         score += 5;
-        rubrica.push({ paso: "4. Experimentación", aprobado: false, mensaje: "Hiciste menos de 2 ensayos; se requieren repeticiones para verificar consistencia." });
+        rubrica.push({
+            paso: "5. Análisis de Datos",
+            aprobado: false,
+            mensaje: "No seleccionaste una interpretación de la tabla de registros en el Paso 5."
+        });
     }
 
-    if (userSession.conclusionSeleccionada.includes("confirma") || userSession.conclusionSeleccionada.includes("valida")) {
-        score += 15;
-        rubrica.push({ paso: "5 & 6. Análisis y Conclusión", aprobado: true, mensaje: "Contrastaste con acierto las mediciones contra tu hipótesis." });
-    } else {
+    // Paso 6: Conclusión Falsable (10 pts)
+    // En el método científico, tanto validar como refutar con datos es un éxito rotundo
+    const tieneConc = Boolean(userSession.conclusionSeleccionada || (userSession.conclusionTexto && userSession.conclusionTexto.length >= 3));
+    if (tieneConc) {
         score += 10;
-        rubrica.push({ paso: "5 & 6. Análisis y Conclusión", aprobado: true, mensaje: "Conclusión honesta con base en datos empíricos." });
+        const concStr = (userSession.conclusionSeleccionada + " " + userSession.conclusionTexto).toLowerCase();
+        if (concStr.includes("refuta") || concStr.includes("rechaza") || concStr.includes("falsa") || concStr.includes("no se cumpl")) {
+            rubrica.push({
+                paso: "6. Conclusión",
+                aprobado: true,
+                mensaje: "¡Excelente rigor y honestidad científica! Refutar una hipótesis con base en evidencia empírica es un avance crucial en la ciencia."
+            });
+        } else {
+            rubrica.push({
+                paso: "6. Conclusión",
+                aprobado: true,
+                mensaje: "Contrastaste con rigor tus mediciones contra tu hipótesis, validando las predicciones formuladas."
+            });
+        }
+    } else {
+        rubrica.push({
+            paso: "6. Conclusión",
+            aprobado: false,
+            mensaje: "Faltó redactar o seleccionar tu conclusión final en el Paso 6."
+        });
     }
 
+    // Paso 7: Divulgación y Comunicación (10 pts)
     if (userSession.comunicacionTitular) {
-        score += 15;
-        rubrica.push({ paso: "7. Divulgación", aprobado: true, mensaje: "Elegiste un titular claro y atractivo para la comunidad científica." });
+        score += 10;
+        rubrica.push({
+            paso: "7. Divulgación",
+            aprobado: true,
+            mensaje: `Elegiste un titular claro, riguroso e impactante: "${userSession.comunicacionTitular}".`
+        });
+    } else {
+        rubrica.push({
+            paso: "7. Divulgación",
+            aprobado: false,
+            mensaje: "No seleccionaste un titular de divulgación en el Paso 7."
+        });
     }
 
     return {
         puntaje: score,
-        mensajeGeneral: score >= 80
-            ? "¡Trabajo científico sobresaliente! Demostraste pensamiento crítico y análisis cuantitativo impecable."
-            : "¡Buen intento! Desarrollaste el método científico con éxito, aunque puedes mejorar realizando más ensayos experimentales.",
+        mensajeGeneral: score >= 90
+            ? "¡Trabajo científico sobresaliente! Demostraste un dominio integral del método científico, análisis cuantitativo impecable y rigor experimental."
+            : score >= 75
+            ? "¡Muy buen trabajo científico! Has formulado hipótesis, medido con rigor y extraído conclusiones coherentes con tus datos."
+            : "¡Buen intento! Desarrollaste parte del proceso experimental. Revisa los pasos señalados y realiza más repeticiones para consolidar tus datos.",
         rubrica
     };
 }
@@ -2188,8 +2335,10 @@ function energizarCircuito() {
 
 function completarConstruccionCircuito() {
     cerrarConstructorCircuito();
-    cambiarPaso(1);
     addActivity("Taller de ensamblaje: Circuito 35V / 10Ω completado y energizado con éxito.");
+    if (pasoActual === 4) {
+        ejecutarEnsayoSimulado("Taller Circuito 35V / 10Ω");
+    }
 }
 
 // Vinculación global explícita para compatibilidad total con eventos inline y móviles
@@ -2744,60 +2893,76 @@ if (restartQuizBtn) {
 function getAIResponse(question) {
     const text = question.toLowerCase();
 
-    if (text.includes("hola") || text.includes("buenos") || text.includes("saludos")) {
-        return "¡Hola! Soy NEXOR-IA, tu asistente científico. Puedo ayudarte con las 18 misiones del laboratorio, resolver tus dudas sobre el método científico y ayudarte a calcular fórmulas físicas.";
+    if (text.includes("hola") || text.includes("buenos") || text.includes("saludos") || text.includes("quien eres") || text.includes("quién eres")) {
+        return "¡Hola! Soy NEXOR-IA, tu tutor científico virtual. Puedo explicarte conceptos de Física, Química y Biología, ayudarte a resolver cualquiera de las 18 misiones de Secundaria y Preparatoria, guiarte en el Método Científico o realizar cálculos con fórmulas.";
     }
 
-    if (text.includes("mision") || text.includes("misiones") || text.includes("experimento")) {
-        return "En la pestaña 'Misiones Científicas' tienes 18 experimentos interactivos para Secundaria y Preparatoria en Física, Química y Biología. Puedes formular hipótesis, medir datos y ser evaluado por IA.";
+    if (text.includes("metodo cientifico") || text.includes("método científico") || text.includes("7 pasos") || text.includes("pasos del metodo")) {
+        return "El Método Científico en NEXOR LAB consta de 7 pasos fundamentales:\n1. Observación de fenómenos naturales.\n2. Planteamiento de una pregunta causal.\n3. Construcción de una Hipótesis falsable ('Si... entonces...').\n4. Experimentación controlada con registro de variables.\n5. Análisis de datos y tablas de mediciones.\n6. Conclusiones (contrastar datos para validar o refutar honestamente).\n7. Comunicación y divulgación científica.";
+    }
+
+    if (text.includes("hipotesis") || text.includes("hipótesis")) {
+        return "Una hipótesis científica debe ser comprobable y falsable. Su estructura lógica ideal es condicional: 'Si modificamos la variable independiente [X], entonces la variable dependiente [Y] responderá de tal manera'. En la ciencia real, refutar una hipótesis con base en mediciones tiene tanto valor como confirmarla.";
+    }
+
+    if (text.includes("circuito") || text.includes("ohm") || text.includes("amper") || text.includes("volt") || text.includes("resistencia") || text.includes("electricidad")) {
+        return "La Ley de Ohm establece la relación fundamental en circuitos eléctricos: V = I × R (Voltaje = Corriente × Resistencia). Para calcular corriente: I = V / R. Por ejemplo, en nuestro taller con una fuente de 35V y una resistencia de 10 Ω, la corriente es exactamente: I = 35V / 10Ω = 3.50 Amperes.";
+    }
+
+    if (text.includes("newton") || text.includes("fuerza") || text.includes("friccion") || text.includes("fricción") || text.includes("segunda ley")) {
+        return "La Segunda Ley de Newton dice que la aceleración de un cuerpo es directamente proporcional a la fuerza neta aplicada e inversamente proporcional a su masa: F = m · a (o a = F / m). Si aplicas 14 N a una masa de 2 kg, obtienes una aceleración de 7.00 m/s².";
+    }
+
+    if (text.includes("velocidad") || text.includes("mru") || text.includes("movimiento") || text.includes("cinematica") || text.includes("cinemática")) {
+        return "En el Movimiento Rectilíneo Uniforme (MRU), la velocidad constante se calcula como la distancia dividida entre el tiempo: v = d / t. Si un móvil recorre 120 metros en 4 segundos, su velocidad es v = 120 / 4 = 30 m/s.";
+    }
+
+    if (text.includes("energia") || text.includes("energía") || text.includes("cinetica") || text.includes("cinética") || text.includes("potencial")) {
+        return "La energía mecánica se conserva. La energía cinética es Ec = 1/2 · m · v² (crece con el cuadrado de la velocidad). La energía potencial gravitatoria es Ep = m · g · h (donde g ≈ 9.8 m/s²).";
+    }
+
+    if (text.includes("pendulo") || text.includes("péndulo") || text.includes("periodo") || text.includes("oscilacion") || text.includes("oscilación")) {
+        return "En un péndulo simple para ángulos pequeños, el periodo T depende únicamente de la longitud de la cuerda (L) y la gravedad (g): T = 2π√(L/g). ¡La masa de la esfera no altera el periodo de oscilación!";
+    }
+
+    if (text.includes("ph") || text.includes("acido") || text.includes("ácido") || text.includes("base") || text.includes("alcalino") || text.includes("neutralizacion")) {
+        return "La escala de pH mide la concentración de iones hidrógeno [H⁺] del 0 al 14. Un pH menor a 7 es ácido (como el HCl o jugo de limón), pH igual a 7 es neutro (agua pura), y pH mayor a 7 es básico o alcalino (como el NaOH o jabón). Al mezclar un ácido con una base se produce una reacción de neutralización formando sal y agua.";
+    }
+
+    if (text.includes("atomo") || text.includes("átomo") || text.includes("electron") || text.includes("electrón") || text.includes("proton") || text.includes("protón") || text.includes("neutron") || text.includes("neutrón")) {
+        return "El átomo es la unidad fundamental de la materia. Posee un núcleo denso central con protones (carga positiva +1) y neutrones (sin carga), rodeado por una nube o niveles de energía donde orbitan los electrones (carga negativa -1).";
+    }
+
+    if (text.includes("mezcla") || text.includes("homogenea") || text.includes("homogénea") || text.includes("heterogenea") || text.includes("heterogénea") || text.includes("solucion") || text.includes("solución")) {
+        return "Una mezcla homogénea (o disolución) tiene una sola fase visible donde soluto y disolvente no se diferencian a simple vista (ejemplo: sal en agua). Una mezcla heterogénea posee dos o más fases distinguibles (ejemplo: agua y aceite, o arena con agua).";
+    }
+
+    if (text.includes("fotosintesis") || text.includes("fotosíntesis") || text.includes("clorofila") || text.includes("cloroplasto")) {
+        return "La fotosíntesis es el proceso anabólico vegetal: 6 CO₂ + 6 H₂O + luz solar → C₆H₁₂O₆ (glucosa) + 6 O₂. Ocurre dentro de los cloroplastos gracias al pigmento clorofila, liberando el oxígeno indispensable para la respiración de los seres vivos.";
+    }
+
+    if (text.includes("celula") || text.includes("célula") || text.includes("mitocondria") || text.includes("eucariota") || text.includes("procariota")) {
+        return "La célula es la unidad morfológica y funcional de la vida. Las células procariotas (como bacterias) no tienen núcleo definido, mientras que las eucariotas (animales y vegetales) tienen núcleo con membrana y organelos especializados como mitocondrias (generación de ATP) y ribosomas (síntesis de proteínas).";
+    }
+
+    if (text.includes("genetica") || text.includes("genética") || text.includes("mendel") || text.includes("adn") || text.includes("alelo")) {
+        return "Las Leyes de Mendel explican la herencia biológica. Los genes poseen variantes llamadas alelos (dominantes 'A' y recesivos 'a'). En un cruce de heterocigotos (Aa × Aa), la probabilidad fenotípica mendeliana es del 75% para el rasgo dominante y 25% para el recesivo.";
     }
 
     if (text.includes("formula") || text.includes("fórmula") || text.includes("calcular")) {
-        return "En el Laboratorio de Física dispones del 'Constructor de fórmulas dinámicas'. Selecciona Velocidad (v=d/t), Fuerza (F=m·a), Densidad (d=m/V), Energía cinética (Ec=0.5·m·v²) o Ley de Ohm (I=V/R) para calcularlas con cualquier dato.";
+        return "En el Laboratorio de Física tienes el 'Constructor de fórmulas dinámicas' interactivo. Puedes calcular automáticamente:\n• Velocidad: v = d / t\n• Fuerza: F = m · a\n• Densidad: d = m / V\n• Energía cinética: Ec = 0.5 · m · v²\n• Ley de Ohm: I = V / R";
     }
 
-    if (text.includes("velocidad") || text.includes("movimiento") || text.includes("cinematica")) {
-        return "En Física, la velocidad media es la distancia recorrida por unidad de tiempo: v = d / t. Por ejemplo, 100 metros en 10 segundos equivale a una velocidad media de 10 m/s.";
+    if (text.includes("mision") || text.includes("misiones") || text.includes("laboratorio")) {
+        return `Dispones de 18 misiones científicas en Nexora LAB agrupadas en Física, Química y Biología tanto para Secundaria como para Preparatoria. Al completarlas, la IA evalúa tus 7 pasos y otorga un rango (Maestro Científico, Investigador Cuántico o Explorador Novato) que queda guardado en tu progreso.`;
     }
 
-    if (text.includes("fuerza") || text.includes("newton") || text.includes("aceleracion") || text.includes("aceleración")) {
-        return "La Segunda Ley de Newton establece que la Fuerza neta es igual a la masa por la aceleración (F = m · a). Su unidad en el Sistema Internacional es el Newton (N).";
-    }
-
-    if (text.includes("densidad") || text.includes("volumen") || text.includes("masa")) {
-        return "La densidad es la razón entre masa y volumen (d = m / V). Indica cuánta masa cabe en determinado espacio.";
-    }
-
-    if (text.includes("energia") || text.includes("energía") || text.includes("cinetica") || text.includes("cinética")) {
-        return "La energía cinética depende de la masa y del cuadrado de la velocidad: Ec = 1/2 · m · v². Si duplicas la rapidez, la energía cinética se multiplica por cuatro.";
-    }
-
-    if (text.includes("ohm") || text.includes("electricidad") || text.includes("corriente") || text.includes("voltaje") || text.includes("resistencia")) {
-        return "La Ley de Ohm relaciona voltaje, corriente y resistencia: V = I × R (o I = V / R). Si aumentas la resistencia para un mismo voltaje, la corriente disminuye.";
-    }
-
-    if (text.includes("atomo") || text.includes("átomo") || text.includes("proton") || text.includes("electron") || text.includes("neutron")) {
-        return "Un átomo cuenta con protones (+) y neutrones (sin carga) en su núcleo denso, y electrones (-) orbitando alrededor de este núcleo.";
-    }
-
-    if (text.includes("mezcla") || text.includes("quimica") || text.includes("disolver")) {
-        return "Una mezcla homogénea (como sal en agua) tiene una sola fase visible; una heterogénea (como agua y aceite) presenta dos o más fases distinguibles.";
-    }
-
-    if (text.includes("fotosintesis") || text.includes("fotosíntesis") || text.includes("planta")) {
-        return "La fotosíntesis permite a las plantas transformar agua, dióxido de carbono y fotones lumínicos en carbohidratos y oxígeno gaseoso.";
-    }
-
-    if (text.includes("celula") || text.includes("célula")) {
-        return "La célula es la unidad viva elemental. Sus tres componentes básicos son la membrana plasmática, el citoplasma y el material genético (en el núcleo en células eucariotas).";
-    }
-
-    return `¡Gran pregunta científica! En relación a "${escapeHTML(question)}": en ciencia siempre partimos de observar el fenómeno, plantear una hipótesis y realizar pruebas empíricas. ¿Deseas explorar Física, Química o Biología?`;
+    return `¡Excelente pregunta científica sobre "${escapeHTML(question)}"! En ciencia abordamos cualquier interrogante formulando una hipótesis comprobable, diseñando un experimento con variables de control y analizando los datos obtenidos. ¿Te gustaría profundizar en Física (mecánica/circuitos), Química (átomos/mezclas/pH) o Biología (células/fotosíntesis/genética)?`;
 }
 
 const chatFormEl = $("chatForm");
 if (chatFormEl) {
-    chatFormEl.addEventListener("submit", function(event) {
+    chatFormEl.addEventListener("submit", async function(event) {
         event.preventDefault();
 
         const input = $("chatInput");
@@ -2808,10 +2973,31 @@ if (chatFormEl) {
         addMessage(question, "user-message");
         input.value = "";
 
+        const apiKey = localStorage.getItem("nexora_gemini_key");
+        if (navigator.onLine && apiKey) {
+            try {
+                const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+                const prompt = `Eres NEXOR-IA, un tutor científico escolar entusiasta, riguroso y claro para alumnos de secundaria y bachillerato en español. Responde en 2-4 párrafos concisos y educativos a la siguiente pregunta: ${question}`;
+                const res = await fetch(endpoint, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    const reply = data.candidates[0].content.parts[0].text;
+                    addMessage(reply, "bot-message");
+                    return;
+                }
+            } catch (e) {
+                console.warn("Fallo en chat nube Gemini, usando tutor local:", e);
+            }
+        }
+
         setTimeout(() => {
             const response = getAIResponse(question);
             addMessage(response, "bot-message");
-        }, 350);
+        }, 250);
     });
 }
 
