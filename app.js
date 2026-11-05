@@ -1,7 +1,7 @@
 // ==========================================================================
 // NEXORA LAB - APLICACIÓN UNIFICADA (app.js)
-// Combina interfaz moderna (styles2, index2, app2) con toda la lógica
-// de simulación, física, química, biología y método científico (app, index, style)
+// Lógica de física, química, biología, simuladores y método científico
+// con evaluación mejorada 100/100 puntos.
 // ==========================================================================
 
 const $ = (id) => document.getElementById(id);

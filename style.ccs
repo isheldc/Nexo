@@ -397,7 +397,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 /* ==========================================
-   HERO BANNER (MATCHING SCREENSHOT)
+   HERO BANNER
    ========================================== */
 
 .hero {
@@ -511,7 +511,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 /* ==========================================
-   TARJETAS DE MATERIAS (SCREENSHOT MATCH)
+   TARJETAS DE MATERIAS
    ========================================== */
 
 .subject-grid {
@@ -1259,7 +1259,7 @@ canvas:active {
 
 /* ==========================================
    MODALES
-   ========================================== */
+   ========================================= */
 
 .modal-backdrop {
     position: fixed;

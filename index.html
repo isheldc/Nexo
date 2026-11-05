@@ -4,18 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nexora LAB - Laboratorio Virtual de Ciencias</title>
-    <meta name="description" content="Laboratorio virtual interactivo de física, química y biología con simulación científica, método experimental guiado y asistente NEXOR-IA." />
-    <meta property="og:title" content="Nexora LAB - Laboratorio Virtual de Ciencias" />
-    <meta property="og:description" content="Laboratorio virtual interactivo de física, química y biología con simulación científica, método experimental guiado y asistente NEXOR-IA." />
-    <meta property="og:type" content="website" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <!-- ==========================================
-         PANTALLA DE ACCESO / LOGIN
-         ========================================== -->
+    <!-- PANTALLA DE ACCESO (LOGIN) -->
     <div id="loginScreen" class="login-screen">
         <div class="login-card">
             <div class="logo">🧪</div>
@@ -41,9 +34,7 @@
         </div>
     </div>
 
-    <!-- ==========================================
-         APLICACIÓN PRINCIPAL
-         ========================================== -->
+    <!-- APLICACIÓN PRINCIPAL -->
     <div id="app" class="app hidden">
 
         <!-- SIDEBAR DE NAVEGACIÓN -->
@@ -81,7 +72,7 @@
         <!-- CONTENIDO PRINCIPAL -->
         <main class="main-content">
 
-            <!-- TOPBAR -->
+            <!-- TOPBAR IDÉNTICO A LA CAPTURA -->
             <header class="topbar">
                 <div>
                     <h2 id="pageTitle">Bienvenido al laboratorio</h2>
@@ -98,7 +89,7 @@
                 </div>
             </header>
 
-            <!-- SECCIÓN 1: INICIO (MATCH SCREENSHOT) -->
+            <!-- SECCIÓN 1: INICIO (MATCH CON LA IMAGEN) -->
             <section id="inicio" class="section active-section">
                 <div class="hero">
                     <div>
@@ -700,9 +691,7 @@
         </main>
     </div>
 
-    <!-- ==========================================
-         MODALES: ENSAMBLAJE DE CIRCUITOS & CONFIG IA
-         ========================================== -->
+    <!-- MODAL TALLER DE ENSAMBLAJE DE CIRCUITOS -->
     <div id="modalBuilderCircuito" class="modal-backdrop hidden">
         <div class="modal-content">
             <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -744,6 +733,6 @@
         </div>
     </div>
 
-    <script src="./app.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
