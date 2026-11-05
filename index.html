@@ -30,196 +30,188 @@
         </div>
     </div>
 
-    <!-- MODAL DE TALLER DE ENSAMBLAJE DE CIRCUITOS (IDÉNTICO A LA IMAGEN CON LÍNEAS PUNTEADAS Y BARRA LATERAL) -->
-    <div id="modal-builder-circuito" class="modal hidden">
-        <div class="modal-box circuit-modal-exact">
-            <div class="flex-between" style="border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 14px;">
-                <div>
-                    <h3 style="font-size: 20px; display:flex; align-items:center; gap:8px;">
-                        <span>🔌</span> Taller de Ensamblaje: Circuito Eléctrico y Ley de Ohm
-                    </h3>
-                    <small style="color:var(--cyan); font-weight:700;">Arrastra los componentes desde la barra lateral hasta las líneas punteadas del circuito</small>
-                </div>
-                <button class="btn-close" onclick="cerrarConstructorCircuito()" aria-label="Cerrar taller">✕</button>
+    <!-- MODAL DE TALLER DE ENSAMBLAJE DE CIRCUITOS -->
+<div id="modal-builder-circuito" class="modal hidden">
+    <div class="modal-box circuit-modal-exact">
+        <div class="flex-between" style="border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 14px;">
+            <div>
+                <h3 style="font-size: 20px; display:flex; align-items:center; gap:8px;">
+                    <span>🔌</span> Taller de Ensamblaje: Circuito Eléctrico y Ley de Ohm
+                </h3>
+                <small style="color:var(--cyan); font-weight:700;">Arrastra los componentes desde la barra lateral hasta las líneas punteadas del circuito</small>
             </div>
+            <button class="btn-close" onclick="cerrarConstructorCircuito()" aria-label="Cerrar taller">✕</button>
+        </div>
 
-            <!-- CONTENEDOR PRINCIPAL: CIRCUITO (CENTRO) + BARRA DE COMPONENTES (LATERAL) -->
-            <div class="circuit-workbench-grid">
+        <!-- CONTENEDOR PRINCIPAL: CIRCUITO (CENTRO) + BARRA DE COMPONENTES (LATERAL) -->
+        <div class="circuit-workbench-grid">
 
-                <!-- ÁREA DEL CIRCUITO ESQUEMÁTICO (ESTILO EXACTO A IMAGEN 2) -->
-                <div class="circuit-schematic-wrapper">
-                    <!-- ENCABEZADO DE DATOS TÉCNICOS -->
-                    <div class="circuit-quick-specs">
-                        <span>🔋 Voltaje: <b>35V</b></span>
-                        <span>⚡ Resistencia: <b>10 Ω</b></span>
-                        <span>💡 Ley de Ohm: <b>I = V / R = 3.50 A</b></span>
-                        <button class="secondary-btn" style="padding:4px 10px; font-size:12px; margin-left:auto; border-color:var(--cyan); color:var(--cyan);" onclick="ensamblarCircuitoCompleto()">
-                            ⚡ Auto-armar Todo
-                        </button>
+            <!-- ÁREA DEL CIRCUITO ESQUEMÁTICO -->
+            <div class="circuit-schematic-wrapper">
+                <!-- ENCABEZADO DE DATOS TÉCNICOS -->
+                <div class="circuit-quick-specs">
+                    <span>🔋 Voltaje: <b>35V</b></span>
+                    <span>⚡ Resistencia: <b>10 Ω</b></span>
+                    <span>💡 Ley de Ohm: <b>I = V / R = 3.50 A</b></span>
+                    <button class="secondary-btn" style="padding:4px 10px; font-size:12px; margin-left:auto; border-color:var(--cyan); color:var(--cyan);" onclick="ensamblarCircuitoCompleto()">
+                        ⚡ Auto-armar Todo
+                    </button>
+                </div>
+
+                <!-- TABLERO NEGRO DEL CIRCUITO CON LÍNEAS PUNTEADAS -->
+                <div class="circuit-canvas-black" id="circuitBoardExact">
+                    <!-- Bucle de cable -->
+                    <div class="circuit-wire-loop"></div>
+
+                    <!-- Nodos en las esquinas -->
+                    <div class="node-dot node-tl"></div>
+                    <div class="node-dot node-tr"></div>
+                    <div class="node-dot node-br"></div>
+                    <div class="node-dot node-bl"></div>
+
+                    <!-- 1. Batería (Izquierda) -->
+                    <div class="slot-target slot-pos-battery" id="slot-bateria"
+                         ondragover="handleCircuitDragOver(event)" ondragleave="handleCircuitDragLeave(event)"
+                         ondrop="handleCircuitDrop(event, 'bateria')" onclick="handleSlotClick('bateria')">
+                        <div class="slot-dashed-box" id="outline-bateria">
+                            <span class="dashed-text">35V</span>
+                            <span class="dashed-sub">Arrastra Batería</span>
+                        </div>
+                        <div class="placed-battery-block hidden" id="placed-bateria">
+                            <div class="battery-label-side">35V</div>
+                            <div class="battery-orange-body"></div>
+                        </div>
                     </div>
 
-                    <!-- TABLERO NEGRO DEL CIRCUITO CON LÍNEAS PUNTEADAS -->
-                    <div class="circuit-canvas-black" id="circuitBoardExact">
-                        <!-- BUCLE DE CABLE ESQUEMÁTICO RESPONSIVO -->
-                        <div class="circuit-wire-loop"></div>
-
-                        <!-- NODOS AZULES DE CONEXIÓN EN ESQUINAS -->
-                        <div class="node-dot node-tl"></div>
-                        <div class="node-dot node-tr"></div>
-                        <div class="node-dot node-br"></div>
-                        <div class="node-dot node-bl"></div>
-
-                        <!-- RANURA 1: BATERÍA (Lado Izquierdo) -->
-                        <div class="slot-target slot-pos-battery" id="slot-bateria"
-                             ondragover="handleCircuitDragOver(event)" ondragleave="handleCircuitDragLeave(event)"
-                             ondrop="handleCircuitDrop(event, 'bateria')" onclick="handleSlotClick('bateria')">
-                            <!-- Estado Punteado -->
-                            <div class="slot-dashed-box box-battery-dashed" id="outline-bateria">
-                                <span class="dashed-text">35V</span>
-                                <span class="dashed-sub">Arrastra Batería</span>
-                            </div>
-                            <!-- Estado Colocado (Bloque naranja exacto a Imagen 2) -->
-                            <div class="placed-battery-block hidden" id="placed-bateria">
-                                <div class="battery-label-side">35V</div>
-                                <div class="battery-orange-body"></div>
-                            </div>
+                    <!-- 2. Interruptor (Arriba) -->
+                    <div class="slot-target slot-pos-switch" id="slot-switch"
+                         ondragover="handleCircuitDragOver(event)" ondragleave="handleCircuitDragLeave(event)"
+                         ondrop="handleCircuitDrop(event, 'switch')" onclick="handleSlotClick('switch')">
+                        <div class="slot-dashed-box" id="outline-switch">
+                            <span class="dashed-sub">Arrastra Interruptor</span>
                         </div>
-
-                        <!-- RANURA 2: INTERRUPTOR (Lado Superior) -->
-                        <div class="slot-target slot-pos-switch" id="slot-switch"
-                             ondragover="handleCircuitDragOver(event)" ondragleave="handleCircuitDragLeave(event)"
-                             ondrop="handleCircuitDrop(event, 'switch')" onclick="handleSlotClick('switch')">
-                            <!-- Estado Punteado -->
-                            <div class="slot-dashed-box box-switch-dashed" id="outline-switch">
-                                <span class="dashed-sub">Arrastra Interruptor</span>
-                            </div>
-                            <!-- Estado Colocado (Barra verde exacta a Imagen 2) -->
-                            <div class="placed-switch-block hidden" id="placed-switch">
-                                <div class="switch-outer-track">
-                                    <div class="switch-green-slider"></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- RANURA 3: RESISTENCIA (Lado Derecho) -->
-                        <div class="slot-target slot-pos-resistor" id="slot-resistencia"
-                             ondragover="handleCircuitDragOver(event)" ondragleave="handleCircuitDragLeave(event)"
-                             ondrop="handleCircuitDrop(event, 'resistencia')" onclick="handleSlotClick('resistencia')">
-                            <!-- Estado Punteado -->
-                            <div class="slot-dashed-box box-resistor-dashed" id="outline-resistencia">
-                                <span class="dashed-sub">Arrastra Resistencia 10 Ω</span>
-                            </div>
-                            <!-- Estado Colocado (Zigzag morado exacto a Imagen 2) -->
-                            <div class="placed-resistor-block hidden" id="placed-resistencia">
-                                <svg viewBox="0 0 32 60" class="purple-zigzag-svg">
-                                    <path d="M16,0 L16,10 L30,22 L2,38 L30,50 L16,56 L16,60" fill="none" stroke="#a855f7" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
-                                </svg>
-                                <span class="resistor-val-tag">10 Ω</span>
-                            </div>
-                        </div>
-
-                        <!-- RANURA 4: BOMBILLA (Lado Inferior) -->
-                        <div class="slot-target slot-pos-bulb" id="slot-bombilla"
-                             ondragover="handleCircuitDragOver(event)" ondragleave="handleCircuitDragLeave(event)"
-                             ondrop="handleCircuitDrop(event, 'bombilla')" onclick="handleSlotClick('bombilla')">
-                            <!-- Estado Punteado -->
-                            <div class="slot-dashed-box box-bulb-dashed" id="outline-bombilla">
-                                <span class="dashed-sub">Arrastra Bombilla</span>
-                            </div>
-                            <!-- Estado Colocado (Círculo amarillo con arco de filamento exacto a Imagen 2) -->
-                            <div class="placed-bulb-block hidden" id="placed-bombilla">
-                                <div class="bulb-yellow-circle" id="bulbGlowElement">
-                                    <div class="bulb-inner-arc"></div>
-                                </div>
+                        <div class="placed-switch-block hidden" id="placed-switch">
+                            <div class="switch-outer-track">
+                                <div class="switch-green-slider"></div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- TARJETA DE ÉXITO Y BOTÓN PARA AVANZAR -->
-                    <div id="circuit-success-box" class="circuit-completion-success-bar hidden">
-                        <div class="success-message">
-                            <strong>⚡ ¡Circuito Armado y Energizado con Éxito!</strong>
-                            <p>Corriente eléctrica fluyendo: <b>I = V / R = 35V / 10Ω = 3.50 Amperes</b>. La bombilla está encendida.</p>
+                    <!-- 3. Resistencia (Derecha) -->
+                    <div class="slot-target slot-pos-resistor" id="slot-resistencia"
+                         ondragover="handleCircuitDragOver(event)" ondragleave="handleCircuitDragLeave(event)"
+                         ondrop="handleCircuitDrop(event, 'resistencia')" onclick="handleSlotClick('resistencia')">
+                        <div class="slot-dashed-box" id="outline-resistencia">
+                            <span class="dashed-text">10 Ω</span>
+                            <span class="dashed-sub">Resistencia</span>
                         </div>
-                        <button class="primary-btn pulse-glow-btn" onclick="completarConstruccionCircuito()">
-                            Continuar al Experimento →
-                        </button>
+                        <div class="placed-resistor-block hidden" id="placed-resistencia">
+                            <svg viewBox="0 0 32 60" class="purple-zigzag-svg">
+                                <path d="M16,0 L16,10 L30,22 L2,38 L30,50 L16,56 L16,60" fill="none" stroke="#a855f7" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- 4. Bombilla (Abajo) -->
+                    <div class="slot-target slot-pos-bulb" id="slot-bombilla"
+                         ondragover="handleCircuitDragOver(event)" ondragleave="handleCircuitDragLeave(event)"
+                         ondrop="handleCircuitDrop(event, 'bombilla')" onclick="handleSlotClick('bombilla')">
+                        <div class="slot-dashed-box" id="outline-bombilla">
+                            <span class="dashed-sub">Arrastra Bombilla</span>
+                        </div>
+                        <div class="placed-bulb-block hidden" id="placed-bombilla">
+                            <div class="bulb-yellow-circle">
+                                <div class="bulb-inner-arc"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- BARRA LATERAL DE COMPONENTES (A UN LADO PARA ARRASTRAR O TOCAR) -->
-                <aside class="circuit-components-sidebar">
-                    <div class="sidebar-shelf-header">
-                        <h4>📦 Barra de Componentes</h4>
-                        <small>Arrastra cada pieza o tócala para colocarla en su línea punteada:</small>
+                <!-- TARJETA DE ÉXITO -->
+                <div id="circuit-success-box" class="circuit-completion-success-bar hidden">
+                    <div class="success-message">
+                        <strong>⚡ ¡Circuito Armado y Energizado con Éxito!</strong>
+                        <p>Corriente eléctrica fluyendo: <b>I = V / R = 35V / 10Ω = 3.50 Amperes</b>. La bombilla está encendida.</p>
                     </div>
-
-                    <div class="components-shelf-list">
-                        <!-- 1. Batería -->
-                        <div class="shelf-component-card" id="drag-comp-bateria"
-                             draggable="true" ondragstart="handleCircuitDragStart(event, 'bateria')"
-                             onclick="seleccionarComponente('bateria')">
-                            <div class="shelf-comp-visual">
-                                <div class="mini-battery-render">35V</div>
-                            </div>
-                            <div class="shelf-comp-details">
-                                <strong>Batería (35V)</strong>
-                                <small>Fuente de voltaje DC</small>
-                            </div>
-                            <span class="btn-drag-tag">Tomar / Colocar</span>
-                        </div>
-
-                        <!-- 2. Interruptor -->
-                        <div class="shelf-component-card" id="drag-comp-switch"
-                             draggable="true" ondragstart="handleCircuitDragStart(event, 'switch')"
-                             onclick="seleccionarComponente('switch')">
-                            <div class="shelf-comp-visual">
-                                <div class="mini-switch-render"></div>
-                            </div>
-                            <div class="shelf-comp-details">
-                                <strong>Interruptor</strong>
-                                <small>Conmutador de malla</small>
-                            </div>
-                            <span class="btn-drag-tag">Tomar / Colocar</span>
-                        </div>
-
-                        <!-- 3. Resistencia -->
-                        <div class="shelf-component-card" id="drag-comp-resistencia"
-                             draggable="true" ondragstart="handleCircuitDragStart(event, 'resistencia')"
-                             onclick="seleccionarComponente('resistencia')">
-                            <div class="shelf-comp-visual">
-                                <svg viewBox="0 0 24 45" style="width:20px; height:34px;">
-                                    <path d="M12,0 L12,6 L22,16 L2,28 L22,38 L12,42 L12,45" fill="none" stroke="#a855f7" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
-                                </svg>
-                            </div>
-                            <div class="shelf-comp-details">
-                                <strong>Resistencia (10 Ω)</strong>
-                                <small>Carga resistiva</small>
-                            </div>
-                            <span class="btn-drag-tag">Tomar / Colocar</span>
-                        </div>
-
-                        <!-- 4. Bombilla -->
-                        <div class="shelf-component-card" id="drag-comp-bombilla"
-                             draggable="true" ondragstart="handleCircuitDragStart(event, 'bombilla')"
-                             onclick="seleccionarComponente('bombilla')">
-                            <div class="shelf-comp-visual">
-                                <div class="mini-bulb-render">
-                                    <div class="mini-bulb-arc"></div>
-                                </div>
-                            </div>
-                            <div class="shelf-comp-details">
-                                <strong>Bombilla</strong>
-                                <small>Carga lumínica</small>
-                            </div>
-                            <span class="btn-drag-tag">Tomar / Colocar</span>
-                        </div>
-                    </div>
-                </aside>
-
+                    <button class="primary-btn pulse-glow-btn" onclick="completarConstruccionCircuito()">
+                        Continuar al Experimento →
+                    </button>
+                </div>
             </div>
+
+            <!-- BARRA LATERAL DE COMPONENTES -->
+            <aside class="circuit-components-sidebar">
+                <div class="sidebar-shelf-header">
+                    <h4>📦 Barra de Componentes</h4>
+                    <small>Arrastra cada pieza o tócala para colocarla en su línea punteada:</small>
+                </div>
+
+                <div class="components-shelf-list">
+                    <!-- 1. Batería -->
+                    <div class="shelf-component-card" id="drag-comp-bateria"
+                         draggable="true" ondragstart="handleCircuitDragStart(event, 'bateria')"
+                         onclick="seleccionarComponente('bateria')">
+                        <div class="shelf-comp-visual">
+                            <div class="mini-battery-render">35V</div>
+                        </div>
+                        <div class="shelf-comp-details">
+                            <strong>Batería (35V)</strong>
+                            <small>Fuente de voltaje DC</small>
+                        </div>
+                        <span class="btn-drag-tag">Tomar / Colocar</span>
+                    </div>
+
+                    <!-- 2. Interruptor -->
+                    <div class="shelf-component-card" id="drag-comp-switch"
+                         draggable="true" ondragstart="handleCircuitDragStart(event, 'switch')"
+                         onclick="seleccionarComponente('switch')">
+                        <div class="shelf-comp-visual">
+                            <div class="mini-switch-render"></div>
+                        </div>
+                        <div class="shelf-comp-details">
+                            <strong>Interruptor</strong>
+                            <small>Conmutador de malla</small>
+                        </div>
+                        <span class="btn-drag-tag">Tomar / Colocar</span>
+                    </div>
+
+                    <!-- 3. Resistencia -->
+                    <div class="shelf-component-card" id="drag-comp-resistencia"
+                         draggable="true" ondragstart="handleCircuitDragStart(event, 'resistencia')"
+                         onclick="seleccionarComponente('resistencia')">
+                        <div class="shelf-comp-visual">
+                            <svg viewBox="0 0 24 45" style="width:20px; height:34px;">
+                                <path d="M12,0 L12,6 L22,16 L2,28 L22,38 L12,42 L12,45" fill="none" stroke="#a855f7" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </div>
+                        <div class="shelf-comp-details">
+                            <strong>Resistencia (10 Ω)</strong>
+                            <small>Carga resistiva</small>
+                        </div>
+                        <span class="btn-drag-tag">Tomar / Colocar</span>
+                    </div>
+
+                    <!-- 4. Bombilla -->
+                    <div class="shelf-component-card" id="drag-comp-bombilla"
+                         draggable="true" ondragstart="handleCircuitDragStart(event, 'bombilla')"
+                         onclick="seleccionarComponente('bombilla')">
+                        <div class="shelf-comp-visual">
+                            <div class="mini-bulb-render">
+                                <div class="mini-bulb-arc"></div>
+                            </div>
+                        </div>
+                        <div class="shelf-comp-details">
+                            <strong>Bombilla</strong>
+                            <small>Carga lumínica</small>
+                        </div>
+                        <span class="btn-drag-tag">Tomar / Colocar</span>
+                    </div>
+                </div>
+            </aside>
+
         </div>
     </div>
+</div>
 
     <!-- 1. PANTALLA DE INICIO DE SESIÓN -->
     <div id="loginScreen" class="login-screen">
