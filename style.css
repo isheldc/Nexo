@@ -1315,8 +1315,9 @@ footer {
     filter: drop-shadow(0 0 6px rgba(168, 85, 247, 0.7));
 }
 /* ==========================================
-   ESTILOS DE POSICIONAMIENTO ABSOLUTO TALLER
+   CORRECCIÓN DEFINITIVA: TALLER DE CIRCUITOS (PC Y MÓVIL)
    ========================================== */
+
 .circuit-canvas-black {
     position: relative !important;
     background: #000000 !important;
@@ -1328,5 +1329,37 @@ footer {
 .slot-target {
     position: absolute !important;
     z-index: 5 !important;
+}
+
+/* En PC: Dos columnas (Circuito + Barra Lateral) */
+.circuit-workbench-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 270px !important;
+    gap: 16px !important;
+    align-items: start !important;
+    width: 100% !important;
+}
+
+/* En Celulares o pantallas pequeñas: Una sola columna vertical y centrada */
+@media (max-width: 768px) {
+    .circuit-workbench-grid {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .circuit-canvas-black {
+        height: 290px !important;
+        width: 100% !important;
+    }
+
+    .circuit-components-sidebar {
+        width: 100% !important;
+        margin-top: 10px !important;
+    }
+
+    .circuit-modal-exact {
+        padding: 12px !important;
+        max-width: 100% !important;
+        width: 98% !important;
+    }
 }
 }
