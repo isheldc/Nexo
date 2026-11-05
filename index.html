@@ -52,21 +52,17 @@
                         <span>🔋 Voltaje: <b>35V</b></span>
                         <span>⚡ Resistencia: <b>10 Ω</b></span>
                         <span>💡 Ley de Ohm: <b>I = V / R = 3.50 A</b></span>
+                        <button class="secondary-btn" style="padding:4px 10px; font-size:12px; margin-left:auto; border-color:var(--cyan); color:var(--cyan);" onclick="ensamblarCircuitoCompleto()">
+                            ⚡ Auto-armar Todo
+                        </button>
                     </div>
 
                     <!-- TABLERO NEGRO DEL CIRCUITO CON LÍNEAS PUNTEADAS -->
                     <div class="circuit-canvas-black" id="circuitBoardExact">
-                        <!-- CABLES ESQUEMÁTICOS CON LÍNEAS PUNTEADAS -->
-                        <div class="wire-exact wire-ex-top-left"></div>
-                        <div class="wire-exact wire-ex-top-right"></div>
-                        <div class="wire-exact wire-ex-right-top"></div>
-                        <div class="wire-exact wire-ex-right-bottom"></div>
-                        <div class="wire-exact wire-ex-bottom-right"></div>
-                        <div class="wire-exact wire-ex-bottom-left"></div>
-                        <div class="wire-exact wire-ex-left-bottom"></div>
-                        <div class="wire-exact wire-ex-left-top"></div>
+                        <!-- BUCLE DE CABLE ESQUEMÁTICO RESPONSIVO -->
+                        <div class="circuit-wire-loop"></div>
 
-                        <!-- NODOS AZULES DE CONEXIÓN EN ESQUINAS Y UNIONES -->
+                        <!-- NODOS AZULES DE CONEXIÓN EN ESQUINAS -->
                         <div class="node-dot node-tl"></div>
                         <div class="node-dot node-tr"></div>
                         <div class="node-dot node-br"></div>
@@ -768,6 +764,27 @@
                             </div>
 
                             <div id="sim-controls-container" class="controls-card"></div>
+
+                            <!-- TABLA EN VIVO DE ENSAYOS REGISTRADOS EN PASO 4 -->
+                            <div class="table-card" style="margin-top:16px;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                                    <span style="font-weight:700; color:var(--cyan); font-size:14px;">📋 Ensayos Registrados en Vivo:</span>
+                                    <span id="badge-contador-ensayos" class="pill">0 ensayos</span>
+                                </div>
+                                <table class="neon-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Ensayo #</th>
+                                            <th>Parámetro Principal</th>
+                                            <th>Respuesta Medida</th>
+                                            <th>Estado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody-ensayos-paso4">
+                                        <tr><td colspan="4" style="text-align:center; color:var(--muted); padding:10px;">Presiona el botón del simulador para registrar tu primer ensayo.</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
 
                             <div id="sensor-btn-box" class="sensor-container hidden">
                                 <button class="secondary-btn" onclick="activarAcelerometroMovil()">📲 Usar sensor de inclinación de mi celular</button>

@@ -1029,10 +1029,9 @@ function iniciarMisionLaboratorio(exp) {
     if (vistaLab) vistaLab.classList.remove("hidden");
     if (vistaEval) vistaEval.classList.add("hidden");
 
+    cambiarPaso(1);
     if (exp.simTipo === "circuito") {
         abrirConstructorCircuito();
-    } else {
-        cambiarPaso(1);
     }
 
     detectarSensores();
@@ -1077,6 +1076,8 @@ function cambiarPaso(paso) {
         arrancarCanvas("canvas-obs", expActual.simTipo, true);
     } else if (paso === 4) {
         arrancarCanvas("canvas-exp", expActual.simTipo, false);
+    } else if (paso === 5) {
+        actualizarTablaPaso5();
     } else if (paso === 6) {
         const hipResumen = `Si ${userSession.hipotesisCondicion || '...'}, entonces ${userSession.hipotesisEfecto || '...'}.`;
         const txtRecordatorio = $("txt-recordatorio-hip");
@@ -1236,14 +1237,25 @@ function poblarOpcionesPaso7(exp) {
 }
 
 // ==========================================
+// ==========================================
 // SIMULADORES EN VIVO Y CONTROLES DEL PASO 4
 // ==========================================
 function configurarSimuladorPaso4(exp) {
     const contenedor = $("sim-controls-container");
-    const tabla = $("tabla-registros");
     if (!contenedor) return;
     contenedor.innerHTML = "";
-    if (tabla) tabla.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#94a3b8;">Aún no has hecho ensayos. ¡Presiona los botones para registrar datos!</td></tr>`;
+
+    // Reset de tabla en vivo en Paso 4
+    const tbodyPaso4 = $("tbody-ensayos-paso4");
+    if (tbodyPaso4) {
+        tbodyPaso4.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--muted); padding:10px;">Presiona el botón del simulador para registrar tu primer ensayo.</td></tr>`;
+    }
+    const badgePaso4 = $("badge-contador-ensayos");
+    if (badgePaso4) {
+        badgePaso4.innerText = "0 ensayos";
+        badgePaso4.style.background = "";
+        badgePaso4.style.color = "";
+    }
 
     if (exp.simTipo === "fuerza" || exp.simTipo === "choque" || exp.simTipo === "newton") {
         simVars.fuerza = 14;
@@ -1278,19 +1290,29 @@ function configurarSimuladorPaso4(exp) {
             </div>
         `;
     } else if (exp.simTipo === "circuito") {
-        simVars.param1 = 9;
+        simVars.param1 = 35;
         contenedor.innerHTML = `
-            <div class="control-item">
-                <div class="control-header" style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>Voltaje: <b id="val-ctrl1">9</b> V</span></div>
-                <input type="range" class="slider" min="1" max="24" value="9" oninput="actualizarSlider(1, this.value, ' V')">
+            <div class="control-item" style="margin-bottom: 12px;">
+                <div class="control-header" style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                    <span>Voltaje de Fuente DC: <b id="val-ctrl1">35 V</b></span>
+                </div>
+                <input type="range" class="slider" min="5" max="60" value="35" oninput="actualizarSlider(1, this.value, ' V')">
             </div>
-            <button class="btn primary-btn" onclick="ejecutarEnsayoSimulado('Cierre de Interruptor')">💡 Medir Intensidad Lumínica</button>
+            <div class="control-item" style="margin-bottom: 14px;">
+                <div class="control-header" style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                    <span>Resistencia de Carga: <b>10.0 Ω</b></span>
+                </div>
+            </div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <button class="btn primary-btn" onclick="ejecutarEnsayoSimulado('Medición con Amperímetro')">⚡ Registrar Corriente (I = V / R)</button>
+                <button class="btn secondary-btn" onclick="abrirConstructorCircuito()">🔌 Taller de Ensamblaje</button>
+            </div>
         `;
     } else if (exp.simTipo === "pendulo") {
         simVars.param1 = 45;
         contenedor.innerHTML = `
             <div class="control-item">
-                <div class="control-header" style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>Amplitud / Apertura: <b id="val-ctrl1">45</b>°</span></div>
+                <div class="control-header" style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>Amplitud / Apertura: <b id="val-ctrl1">45°</b></span></div>
                 <input type="range" class="slider" min="15" max="85" value="45" oninput="actualizarSlider(1, this.value, '°')">
             </div>
             <button class="btn primary-btn" onclick="ejecutarEnsayoSimulado('Medición de Péndulo')">⏱️ Registrar Lectura del Péndulo</button>
@@ -1299,10 +1321,10 @@ function configurarSimuladorPaso4(exp) {
         simVars.param1 = 50;
         contenedor.innerHTML = `
             <div class="control-item">
-                <div class="control-header" style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>Intensidad de Entrada: <b id="val-ctrl1">50</b> %</span></div>
+                <div class="control-header" style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>Intensidad de Entrada: <b id="val-ctrl1">50 %</b></span></div>
                 <input type="range" class="slider" min="10" max="100" value="50" oninput="actualizarSlider(1, this.value, ' %')">
             </div>
-            <button class="btn primary-btn" onclick="ejecutarEnsayoSimulado('Medición Sensorial')">🚀 Registrar Lectura</button>
+            <button class="btn primary-btn" onclick="ejecutarEnsayoSimulado('Medición de Parámetro')">🚀 Registrar Lectura</button>
         `;
     }
 }
@@ -1328,9 +1350,9 @@ function lanzarPruebaNewton() {
     simVars.velocidadAcc = parseFloat(aceleracion);
 
     registrarFilaTabla(
-        `F = ${fuerza} N, m = ${masa} kg`,
+        `Fuerza = ${fuerza} N, Masa = ${masa} kg`,
         `Aceleración = ${aceleracion} m/s²`,
-        "Completado"
+        aceleracion > 20 ? "Aceleración Alta" : "Aceleración Normal"
     );
 }
 
@@ -1349,48 +1371,92 @@ function accionarReactivoPH(tipo) {
     const valTag = $("val-ph-live");
     if (valTag) valTag.innerText = simVars.param1.toFixed(2);
 
-    registrarFilaTabla(`Gotas de ${tipo.toUpperCase()}`, `pH = ${simVars.param1.toFixed(2)}`, simVars.param1 < 7 ? "Ácido" : simVars.param1 > 7 ? "Base" : "Neutro");
+    registrarFilaTabla(
+        `Gotas de ${tipo.toUpperCase()}`,
+        `pH = ${simVars.param1.toFixed(2)}`,
+        simVars.param1 < 7 ? "Ácido" : simVars.param1 > 7 ? "Base" : "Neutro"
+    );
 }
 
 function ejecutarEnsayoSimulado(nombreAccion) {
     let medicion = "";
     let estado = "Normal";
 
-    if (expActual && expActual.simTipo === "fuerza") {
+    if (expActual && (expActual.simTipo === "fuerza" || expActual.simTipo === "newton")) {
         const acel = (simVars.param1 / 2.5).toFixed(2);
         medicion = `Aceleración: ${acel} m/s²`;
-        estado = acel > 20 ? "Aceleración Alta" : "Aceleración Media";
+        estado = acel > 20 ? "Aceleración Alta" : "Aceleración Normal";
     } else if (expActual && expActual.simTipo === "circuito") {
-        const amperes = (simVars.param1 / 10).toFixed(2);
-        medicion = `Corriente: ${amperes} A`;
-        estado = amperes > 1.5 ? "Foco Muy Brillante" : "Brillo Normal";
+        const V = simVars.param1 || 35;
+        const R = 10;
+        const amperes = (V / R).toFixed(2);
+        medicion = `Corriente I = ${V}V / ${R}Ω = ${amperes} A`;
+        estado = amperes > 3.0 ? "Brillo Intenso" : amperes > 1.5 ? "Brillo Normal" : "Brillo Tenue";
+    } else if (expActual && expActual.simTipo === "pendulo") {
+        const periodo = (2 * Math.PI * Math.sqrt(1 / 9.8)).toFixed(2);
+        medicion = `Periodo = ${periodo} s (Amplitud = ${simVars.param1}°)`;
+        estado = "Oscilación Estable";
     } else {
         medicion = `Respuesta = ${(simVars.param1 * 1.34).toFixed(1)} unidades`;
         estado = "Registro Válido";
     }
 
-    registrarFilaTabla(`${nombreAccion} (${simVars.param1})`, medicion, estado);
+    registrarFilaTabla(`${nombreAccion} (${simVars.param1 || ''})`, medicion, estado);
 }
 
 function registrarFilaTabla(control, resultado, estado) {
-    const tabla = $("tabla-registros");
-    if (!tabla) return;
-    if (userSession.ensayos.length === 0) tabla.innerHTML = "";
-
     const num = userSession.ensayos.length + 1;
-    userSession.ensayos.push({ num, control, resultado, estado });
+    const nuevoEnsayo = { num, control, resultado, estado };
+    userSession.ensayos.push(nuevoEnsayo);
 
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-        <td><b>#${num}</b></td>
-        <td>${control}</td>
-        <td style="color:var(--cyan); font-weight:700;">${resultado}</td>
-        <td><span class="pill">${estado}</span></td>
-    `;
-    tabla.appendChild(tr);
+    // 1. Insertar en tabla en vivo de Paso 4
+    const tbodyPaso4 = $("tbody-ensayos-paso4");
+    if (tbodyPaso4) {
+        if (num === 1) tbodyPaso4.innerHTML = "";
+        const tr4 = document.createElement("tr");
+        tr4.innerHTML = `
+            <td><b>#${num}</b></td>
+            <td>${control}</td>
+            <td style="color:var(--cyan); font-weight:700;">${resultado}</td>
+            <td><span class="pill">${estado}</span></td>
+        `;
+        tbodyPaso4.appendChild(tr4);
+    }
+
+    const badgePaso4 = $("badge-contador-ensayos");
+    if (badgePaso4) {
+        badgePaso4.innerText = `${num} ensayo${num > 1 ? 's' : ''}`;
+        badgePaso4.style.background = "var(--cyan)";
+        badgePaso4.style.color = "#071526";
+    }
+
+    // 2. Sincronizar tabla de Paso 5
+    actualizarTablaPaso5();
 
     experiments++;
-    addActivity(`Ensayo #${num} en ${expActual ? expActual.titulo : "Laboratorio"}`);
+    addActivity(`Ensayo #${num} en ${expActual ? expActual.titulo : "Laboratorio"}: ${resultado}`);
+}
+
+function actualizarTablaPaso5() {
+    const tbodyPaso5 = $("tbody-ensayos");
+    if (!tbodyPaso5) return;
+
+    if (!userSession.ensayos || userSession.ensayos.length === 0) {
+        tbodyPaso5.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--muted); padding:16px;">Realiza ensayos en el Paso 4 para ver datos aquí.</td></tr>`;
+        return;
+    }
+
+    tbodyPaso5.innerHTML = "";
+    userSession.ensayos.forEach(e => {
+        const tr5 = document.createElement("tr");
+        tr5.innerHTML = `
+            <td><b>#${e.num}</b></td>
+            <td>${e.control}</td>
+            <td style="color:var(--cyan); font-weight:700;">${e.resultado}</td>
+            <td><span class="pill">${e.estado}</span></td>
+        `;
+        tbodyPaso5.appendChild(tr5);
+    });
 }
 
 function detenerCanvasAnim() {
@@ -2106,6 +2172,12 @@ function colocarComponenteEnSlot(tipo) {
     }
 }
 
+function ensamblarCircuitoCompleto() {
+    ["bateria", "switch", "resistencia", "bombilla"].forEach(tipo => {
+        colocarComponenteEnSlot(tipo);
+    });
+}
+
 function energizarCircuito() {
     const board = $("circuitBoardExact") || $("circuitBoard");
     if (board) board.classList.add("energized");
@@ -2119,6 +2191,19 @@ function completarConstruccionCircuito() {
     cambiarPaso(1);
     addActivity("Taller de ensamblaje: Circuito 35V / 10Ω completado y energizado con éxito.");
 }
+
+// Vinculación global explícita para compatibilidad total con eventos inline y móviles
+window.colocarComponenteEnSlot = colocarComponenteEnSlot;
+window.ensamblarCircuitoCompleto = ensamblarCircuitoCompleto;
+window.seleccionarComponente = seleccionarComponente;
+window.handleSlotClick = handleSlotClick;
+window.handleCircuitDragStart = handleCircuitDragStart;
+window.handleCircuitDragOver = handleCircuitDragOver;
+window.handleCircuitDragLeave = handleCircuitDragLeave;
+window.handleCircuitDrop = handleCircuitDrop;
+window.completarConstruccionCircuito = completarConstruccionCircuito;
+window.abrirConstructorCircuito = abrirConstructorCircuito;
+window.cerrarConstructorCircuito = cerrarConstructorCircuito;
 
 // ==========================================
 // SIMULADORES DEL VIDEO TUTORIAL
