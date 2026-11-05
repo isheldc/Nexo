@@ -1,32 +1,21 @@
-// ==========================================================================
-// NEXORA LAB - APLICACIÓN UNIFICADA (app.js)
-// Lógica de física, química, biología, simuladores y método científico
-// con evaluación mejorada 100/100 puntos.
-// ==========================================================================
+/* ==========================================================================
+   NEXORA LAB PRO - MOTOR UNIFICADO INTEGRADO (APP.JS + APP2.JS)
+   ========================================================================== */
 
 const $ = (id) => document.getElementById(id);
 
-// Estado de usuario y persistencia
-let student = localStorage.getItem("nexoraStudent") || "citlali";
-let experiments = Number(localStorage.getItem("nexoraExperiments") || 3);
-let correctAnswers = Number(localStorage.getItem("nexoraCorrect") || 2);
-let missionsCompleted = Number(localStorage.getItem("nexoraMissions") || 1);
+let student = localStorage.getItem("nexoraStudent") || "";
+let experiments = Number(localStorage.getItem("nexoraExperiments") || 0);
+let correctAnswers = Number(localStorage.getItem("nexoraCorrect") || 0);
 let history = JSON.parse(localStorage.getItem("nexoraHistory") || "[]");
 
-if (history.length === 0) {
-    history = [
-        { description: "Inicio de sesión en Nexora LAB como " + student, date: new Date().toLocaleString("es-MX") },
-        { description: "Exploración de laboratorio virtual", date: new Date(Date.now() - 300000).toLocaleString("es-MX") }
-    ];
-}
-
-// Variables de Misiones Científicas Pro
 let nivelActual = "Secundaria";
 let materiaActual = "Fisica";
 let expActual = null;
 let pasoActual = 1;
 let animId = null;
-let simVars = { param1: 35, fuerza: 14, masa: 2.0, impulsoActivo: false, velocidadAcc: 0 };
+let sensorActivo = false;
+let sensorTilt = 0;
 
 let userSession = {
     observacionSeleccionada: "",
@@ -41,9 +30,205 @@ let userSession = {
     comunicacionTitular: ""
 };
 
-// ==========================================================================
-// BASE DE DATOS DE LOS 18 EXPERIMENTOS (SECUNDARIA & PREPARATORIA)
-// ==========================================================================
+/* GESTIÓN DE SESIÓN DE USUARIO */
+function saveProgress() {
+    localStorage.setItem("nexoraExperiments", experiments);
+    localStorage.setItem("nexoraCorrect", correctAnswers);
+    localStorage.setItem("nexoraHistory", JSON.stringify(history));
+    updateProgress();
+}
+
+function addActivity(description) {
+    history.unshift({
+        description,
+        date: new Date().toLocaleString("es-MX")
+    });
+    history = history.slice(0, 20);
+    saveProgress();
+}
+
+function updateProgress() {
+    if ($("experimentCount")) $("experimentCount").textContent = experiments;
+    if ($("quizScore")) $("quizScore").textContent = correctAnswers;
+
+    const container = $("activityHistory");
+    if (!container) return;
+
+    if (history.length === 0) {
+        container.textContent = "Todavía no tienes actividades registradas.";
+        return;
+    }
+
+    container.innerHTML = history.map(item => `
+        <div class="history-item">
+            <strong>${escapeHTML(item.description)}</strong>
+            <small>${escapeHTML(item.date)}</small>
+        </div>
+    `).join("");
+}
+
+function escapeHTML(value) {
+    return String(value).replace(/[&<>"']/g, character => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+    })[character]);
+}
+
+function enterApp(name) {
+    student = name;
+    localStorage.setItem("nexoraStudent", student);
+
+    if ($("loginScreen")) $("loginScreen").classList.add("hidden");
+    if ($("app")) $("app").classList.remove("hidden");
+
+    if ($("welcomeName")) $("welcomeName").textContent = student;
+    if ($("heroName")) $("heroName").textContent = student;
+
+    updateProgress();
+}
+
+/* EVENTOS DE LOGIN Y LOGOUT */
+window.addEventListener("DOMContentLoaded", () => {
+    cargarTemaGuardado();
+    syncRed();
+
+    const loginForm = $("loginForm");
+    if (loginForm) {
+        loginForm.addEventListener("submit", function(event) {
+            event.preventDefault();
+            const name = $("studentName").value.trim();
+            const password = $("studentPassword").value;
+
+            if (name.length < 2 || password.length < 4) {
+                alert("Escribe un nombre y una contraseña de al menos 4 caracteres.");
+                return;
+            }
+            enterApp(name);
+        });
+    }
+
+    const logoutBtn = $("logoutBtn");
+    if (logoutBtn) {
+        logoutBtn.addEventListener("click", function() {
+            localStorage.removeItem("nexoraStudent");
+            student = "";
+            if ($("app")) $("app").classList.add("hidden");
+            if ($("loginScreen")) $("loginScreen").classList.remove("hidden");
+            if (loginForm) loginForm.reset();
+        });
+    }
+
+    if (student) {
+        enterApp(student);
+    }
+});
+
+/* NAVEGACIÓN GENERAL */
+function showSection(sectionId) {
+    document.querySelectorAll(".section").forEach(section => {
+        section.classList.remove("active-section");
+    });
+
+    document.querySelectorAll(".nav-btn").forEach(button => {
+        button.classList.remove("active");
+    });
+
+    const section = $(sectionId);
+    if (!section) return;
+
+    section.classList.add("active-section");
+
+    const activeButton = document.querySelector(`.nav-btn[data-section="${sectionId}"]`);
+    if (activeButton) activeButton.classList.add("active");
+
+    const titles = {
+        inicio: "Bienvenido al laboratorio",
+        misiones: "Misiones Científicas por Nivel",
+        fisica: "Laboratorio de Física",
+        quimica: "Laboratorio de Química",
+        biologia: "Laboratorio de Biología",
+        evaluacion: "Evaluaciones & Cuestionarios",
+        progreso: "Mi progreso y actividad",
+        ia: "Asistente NEXOR-IA"
+    };
+
+    if ($("pageTitle")) $("pageTitle").textContent = titles[sectionId] || "Nexora LAB PRO";
+
+    if (sectionId === "progreso") updateProgress();
+    if (sectionId === "misiones") seleccionarNivel(nivelActual || "Secundaria");
+}
+
+document.querySelectorAll(".nav-btn").forEach(button => {
+    button.addEventListener("click", () => {
+        showSection(button.dataset.section);
+    });
+});
+
+/* GESTIÓN DE TEMA OSCURO / CLARO */
+function toggleTheme() {
+    const body = document.documentElement;
+    const currentTheme = body.getAttribute("data-theme");
+    const btnTheme = document.getElementById("btn-theme");
+
+    if (currentTheme === "light") {
+        body.setAttribute("data-theme", "dark");
+        localStorage.setItem("nexora_theme", "dark");
+        if (btnTheme) btnTheme.innerText = "🌙";
+    } else {
+        body.setAttribute("data-theme", "light");
+        localStorage.setItem("nexora_theme", "light");
+        if (btnTheme) btnTheme.innerText = "☀️";
+    }
+}
+
+function cargarTemaGuardado() {
+    const savedTheme = localStorage.getItem("nexora_theme") || "dark";
+    const btnTheme = document.getElementById("btn-theme");
+    document.documentElement.setAttribute("data-theme", savedTheme);
+    if (btnTheme) {
+        btnTheme.innerText = savedTheme === "light" ? "☀️" : "🌙";
+    }
+}
+
+/* RED Y CONFIGURACIÓN DE IA */
+window.addEventListener('online', syncRed);
+window.addEventListener('offline', syncRed);
+
+function syncRed() {
+    const pill = document.getElementById("estado-red");
+    if (!pill) return;
+    if (navigator.onLine) {
+        pill.innerText = "🟢 Conectado (IA Global)";
+        pill.className = "pill online";
+    } else {
+        pill.innerText = "🔴 Sin Conexión (IA Local)";
+        pill.className = "pill offline";
+    }
+}
+
+function toggleModalConfig() {
+    const modal = document.getElementById("modal-config");
+    if (modal) modal.classList.toggle("hidden");
+    const input = document.getElementById("input-api-key");
+    if (input) input.value = localStorage.getItem("nexora_gemini_key") || "";
+}
+
+function guardarApiKey() {
+    const key = document.getElementById("input-api-key").value.trim();
+    if (key) {
+        localStorage.setItem("nexora_gemini_key", key);
+        alert("¡Clave de IA en la nube guardada con éxito!");
+    } else {
+        localStorage.removeItem("nexora_gemini_key");
+        alert("Clave eliminada. Se utilizará la IA Local autónoma.");
+    }
+    toggleModalConfig();
+}
+
+/* BASE DE DATOS DE EXPERIMENTOS DE APP.JS */
 const dbExperimentos = {
     Secundaria: {
         Fisica: [
@@ -53,9 +238,9 @@ const dbExperimentos = {
                 desc: "Descubre cómo un objeto acelera cuando empujas más fuerte o cuando el suelo resbala más.",
                 simTipo: "fuerza",
                 preguntasObs: [
-                    "El carrito acelera rápido cuando se aplica fuerza, pero frena gradualmente por la fricción de la pista.",
+                    "El carrito acelera rápido cuando se aplica fuerza, pero frena por la fricción.",
                     "El carrito nunca se mueve sin importar cuánta fuerza apliquemos.",
-                    "La fricción aumenta la velocidad del carrito hacia adelante espontáneamente."
+                    "La fricción aumenta la velocidad del carrito hacia adelante."
                 ],
                 preguntasProb: [
                     "¿Cómo influye la fuerza del empuje en la aceleración del carrito?",
@@ -121,7 +306,7 @@ const dbExperimentos = {
                 preguntasObs: [
                     "El foco brilla con más intensidad cuando aumentamos el voltaje de la batería.",
                     "Al aumentar la resistencia del cable, el foco se ilumina con mayor brillo.",
-                    "Los electrones no fluyen cuando el circuito está debidamente cerrado."
+                    "Los electrones no fluyen cuando el interruptor está cerrado."
                 ],
                 preguntasProb: [
                     "¿Cómo afecta el aumento de resistencia al flujo de corriente (Amperes)?",
@@ -155,7 +340,7 @@ const dbExperimentos = {
                 simTipo: "ph",
                 preguntasObs: [
                     "El líquido cambia a rojo con ácidos y a violeta/azul con sustancias básicas.",
-                    "El pH siempre se mantiene en 7 sin importar qué reactivo agreguemos.",
+                    "El pH siempre se mantiene en 7 sin importar qué sustancia agreguemos.",
                     "Los ácidos y las bases son exactamente la misma sustancia química."
                 ],
                 preguntasProb: [
@@ -163,7 +348,7 @@ const dbExperimentos = {
                     "¿Por qué los ácidos tienen sabor dulce en la simulación?",
                     "¿Cómo cambia el color del agua si no le agregamos ningún reactivo?"
                 ],
-                hipCondiciones: ["Añadimos gotas de base (NaOH) a un ácido fuerte", "Agregamos agua pura destilada al compuesto", "Mezclamos dos ácidos idénticos"],
+                hipCondiciones: ["Añadimos gotas de base (NaOH) a un ácido fuerte", "Agregamos agua pura al compuesto", "Mezclamos dos ácidos idénticos"],
                 hipEfectos: ["el pH subirá hacia 7 (neutralización)", "el pH caerá a valores negativos", "la solución explotará instantáneamente"],
                 analisisOpciones: [
                     "La adición de iones OH- neutraliza los iones H+, llevando el pH hacia la zona neutra (7).",
@@ -358,7 +543,7 @@ const dbExperimentos = {
                 desc: "Calcula el ángulo de disparo óptimo para maximizar el alcance horizontal.",
                 simTipo: "parabolico",
                 preguntasObs: [
-                    "El proyectil describe una trayectoria en parábola curva por la gravedad constante.",
+                    "El proyectil describe una trayectoria en parábola curva por culpa de la gravedad.",
                     "El objeto viaja en línea recta horizontal infinita sin caer al suelo.",
                     "A 90 grados el proyectil logra la máxima distancia horizontal."
                 ],
@@ -391,7 +576,7 @@ const dbExperimentos = {
                 desc: "Haz colisionar dos carritos elásticos y calcula la cantidad de movimiento (p = m·v).",
                 simTipo: "choque",
                 preguntasObs: [
-                    "Al chocar dos masas idénticas, se transfieren velocidad y momento lineal total.",
+                    "Al chocar dos masas idénticas, se transfieren velocidad y momento lineal.",
                     "Los carritos se fusionan y desaparecen tras el impacto.",
                     "La masa pesada sale despedida más rápido que la liviana."
                 ],
@@ -570,7 +755,7 @@ const dbExperimentos = {
                     "¿Cómo influye la música clásica en los alelos de un guisante?"
                 ],
                 hipCondiciones: ["Cruzamos dos plantas heterocigotas Rr x Rr", "Cruzamos un homocigoto dominante con uno recesivo (RR x rr)", "Cruzamos dos homocigotos recesivos rr x rr"],
-                hipEfectos: ["obtendremos una proporción 3:1 de flores rojas vs blancas", "todos los descendientes serán 100% idénticos al padre", "no nacerá ninguna semilla fértil"],
+                hipEfectos: ["obtendremos una proporción 3:1 de flores rojas vs blancas", "todos los descendientes serán 100% idénticos al padre", "no nacerá ninguna semilla féil"],
                 analisisOpciones: [
                     "La segregación de alelos explica la aparición de una proporción 3 dominantes por cada 1 recesivo en F2.",
                     "La genética mendeliana no funciona con caracteres hereditarios simples.",
@@ -657,257 +842,1022 @@ const dbExperimentos = {
     }
 };
 
-// ==========================================================================
-// PREGUNTAS DEL CUESTIONARIO CIENTÍFICO (EVALUACIONES)
-// ==========================================================================
-const questions = [
-    {
-        question: "¿Qué fórmula permite calcular la velocidad media?",
-        options: ["Distancia ÷ tiempo", "Tiempo ÷ distancia", "Distancia × masa"],
-        answer: 0,
-        explanation: "La velocidad media se calcula dividiendo la distancia recorrida entre el tiempo empleado (v = d / t)."
-    },
-    {
-        question: "¿Qué establece la ley de Ohm en electrodinámica?",
-        options: ["La relación entre masa y volumen", "La relación entre voltaje, corriente y resistencia (V = I · R)", "La relación entre luz y temperatura"],
-        answer: 1,
-        explanation: "La ley de Ohm establece que V = I · R (el voltaje es igual a la corriente multiplicada por la resistencia)."
-    },
-    {
-        question: "¿Qué ocurre cuando la sal de mesa se disuelve en agua?",
-        options: ["Se forma una mezcla homogénea (disolución)", "Se convierte en un metal alcalino sólido", "Desaparece la materia del recipiente"],
-        answer: 0,
-        explanation: "La sal se disocia en iones sodio y cloruro formando una mezcla homogénea de una sola fase."
-    },
-    {
-        question: "¿Qué estructura contiene el material genético de una célula eucariota?",
-        options: ["Membrana plasmática", "Núcleo celular", "Pared celular"],
-        answer: 1,
-        explanation: "El núcleo celular alberga el ADN en los cromosomas y coordina las funciones biológicas."
-    },
-    {
-        question: "¿Qué elementos necesita una planta para realizar la fotosíntesis?",
-        options: ["Luz solar, agua y dióxido de carbono (CO2)", "Arena, aceite y sal de mesa", "Únicamente gas oxígeno"],
-        answer: 0,
-        explanation: "La fotosíntesis utiliza fotones de luz, agua y CO2 para generar carbohidratos (glucosa) y liberar oxígeno."
-    },
-    {
-        question: "¿Qué partícula subatómica tiene carga eléctrica negativa?",
-        options: ["Protón", "Neutrón", "Electrón"],
-        answer: 2,
-        explanation: "El electrón tiene carga negativa (-1e); el protón tiene carga positiva y el neutrón carece de carga eléctrica neta."
-    }
-];
+/* NAVEGACIÓN DE MISIONES CIENTÍFICAS */
+function seleccionarNivel(nivel) {
+    nivelActual = nivel;
+    const menuNiveles = document.getElementById("menu-niveles");
+    const menuMaterias = document.getElementById("menu-materias");
+    const vistaLab = document.getElementById("vista-laboratorio");
+    const vistaEval = document.getElementById("vista-evaluacion");
 
-let currentQuestion = 0;
-let questionAnswered = false;
-let sessionScore = 0;
+    if (menuNiveles) menuNiveles.classList.add("hidden");
+    if (vistaLab) vistaLab.classList.add("hidden");
+    if (vistaEval) vistaEval.classList.add("hidden");
 
-// ==========================================================================
-// FUNCIONES DE PROGRESO Y ACTIVIDAD
-// ==========================================================================
-function saveProgress() {
-    localStorage.setItem("nexoraExperiments", experiments);
-    localStorage.setItem("nexoraCorrect", correctAnswers);
-    localStorage.setItem("nexoraMissions", missionsCompleted);
-    localStorage.setItem("nexoraHistory", JSON.stringify(history));
-    updateProgressUI();
+    const tit = document.getElementById("titulo-nivel");
+    if (tit) tit.innerText = `Misiones para ${nivel}`;
+
+    if (menuMaterias) menuMaterias.classList.remove("hidden");
+    filtrarMateria("Fisica");
 }
 
-function addActivity(description) {
-    history.unshift({
-        description,
-        date: new Date().toLocaleString("es-MX")
+function volverMenuNiveles() {
+    const menuMaterias = document.getElementById("menu-materias");
+    const menuNiveles = document.getElementById("menu-niveles");
+    if (menuMaterias) menuMaterias.classList.add("hidden");
+    if (menuNiveles) menuNiveles.classList.remove("hidden");
+}
+
+function filtrarMateria(materia) {
+    materiaActual = materia;
+    document.querySelectorAll(".subject-btn").forEach(btn => btn.classList.remove("active"));
+    const btnActivo = document.getElementById(`btn-mat-${materia}`);
+    if (btnActivo) btnActivo.classList.add("active");
+
+    const lista = document.getElementById("lista-temas");
+    if (!lista) return;
+    lista.innerHTML = "";
+
+    const experimentosSub = dbExperimentos[nivelActual][materia] || [];
+    experimentosSub.forEach(exp => {
+        const item = document.createElement("div");
+        item.className = "exp-item";
+        item.innerHTML = `<h4>${exp.titulo}</h4><p>${exp.desc}</p>`;
+        item.onclick = () => iniciarMisionLaboratorio(exp);
+        lista.appendChild(item);
     });
-    history = history.slice(0, 30);
-    saveProgress();
 }
 
-function updateProgressUI() {
-    if ($("experimentCount")) $("experimentCount").textContent = experiments;
-    if ($("quizScore")) $("quizScore").textContent = correctAnswers;
-    if ($("missionCount")) $("missionCount").textContent = missionsCompleted;
+function volverAMaterias() {
+    detenerCanvasAnim();
+    const vistaLab = document.getElementById("vista-laboratorio");
+    const menuMaterias = document.getElementById("menu-materias");
+    if (vistaLab) vistaLab.classList.add("hidden");
+    if (menuMaterias) menuMaterias.classList.remove("hidden");
+}
 
-    const rankTitle = $("userRankTitle");
-    if (rankTitle) {
-        const total = experiments * 2 + correctAnswers * 3;
-        if (total >= 35) {
-            rankTitle.textContent = "🏆 Maestro del Cosmos";
-            rankTitle.style.color = "#10b981";
-        } else if (total >= 15) {
-            rankTitle.textContent = "⚡ Investigador Cuántico";
-            rankTitle.style.color = "#f59e0b";
+/* FLUSO DE EXPERIMENTACIÓN EN 7 PASOS */
+function iniciarMisionLaboratorio(exp) {
+    expActual = exp;
+    userSession = {
+        observacionSeleccionada: "",
+        observacionLibre: "",
+        problemaSeleccionado: "",
+        hipotesisCondicion: "",
+        hipotesisEfecto: "",
+        ensayos: [],
+        analisisSeleccionado: "",
+        conclusionSeleccionada: "",
+        conclusionTexto: "",
+        comunicacionTitular: ""
+    };
+
+    if ($("lab-titulo")) $("lab-titulo").innerText = exp.titulo;
+    if ($("lab-tag")) $("lab-tag").innerText = materiaActual.toUpperCase();
+
+    poblarOpcionesPaso1(exp);
+    poblarOpcionesPaso2(exp);
+    poblarConstructorPaso3(exp);
+    configurarSimuladorPaso4(exp);
+    poblarOpcionesPaso5(exp);
+    poblarOpcionesPaso6(exp);
+    poblarOpcionesPaso7(exp);
+
+    const menuMaterias = document.getElementById("menu-materias");
+    const vistaLab = document.getElementById("vista-laboratorio");
+    if (menuMaterias) menuMaterias.classList.add("hidden");
+    if (vistaLab) vistaLab.classList.remove("hidden");
+
+    if (exp.simTipo === "circuito") {
+        abrirConstructorCircuito();
+    } else {
+        cambiarPaso(1);
+    }
+    detectarSensores();
+}
+
+function cambiarPaso(paso) {
+    pasoActual = paso;
+    document.querySelectorAll(".step-card").forEach(c => c.classList.add("hidden"));
+
+    const cardActual = document.querySelector(`.step-card[data-paso="${paso}"]`);
+    if (cardActual) cardActual.classList.remove("hidden");
+
+    const titulos = [
+        "1. Observación", "2. Pregunta Problema", "3. Formulación de Hipótesis",
+        "4. Experimentación Virtual", "5. Análisis de Mediciones", "6. Conclusión", "7. Divulgación"
+    ];
+
+    if ($("step-name")) $("step-name").innerText = `Paso ${paso}/7: ${titulos[paso - 1]}`;
+    if ($("progress-fill")) $("progress-fill").style.width = `${(paso / 7) * 100}%`;
+
+    detenerCanvasAnim();
+
+    if (paso === 1) {
+        arrancarCanvas("canvas-obs", expActual.simTipo, true);
+    } else if (paso === 4) {
+        arrancarCanvas("canvas-exp", expActual.simTipo, false);
+    } else if (paso === 6) {
+        const hipResumen = `Si ${userSession.hipotesisCondicion || '...'}, entonces ${userSession.hipotesisEfecto || '...'}.`;
+        if ($("txt-recordatorio-hip")) $("txt-recordatorio-hip").innerText = `"${hipResumen}"`;
+    }
+}
+
+function avanzarPaso(pasoActual, pasoSiguiente) {
+    if (pasoActual === 1 && !userSession.observacionSeleccionada) {
+        alert("¡Selecciona al menos una observación de la lista para continuar!");
+        return;
+    }
+    if (pasoActual === 2 && !userSession.problemaSeleccionado) {
+        const probLibre = document.getElementById("input-problema-libre") ? document.getElementById("input-problema-libre").value.trim() : "";
+        if (!probLibre) {
+            alert("¡Elige una pregunta de investigación o escribe una personalizada!");
+            return;
+        }
+        userSession.problemaSeleccionado = probLibre;
+    }
+    if (pasoActual === 5 && !userSession.analisisSeleccionado) {
+        alert("¡Selecciona la tendencia que descubriste en tus datos!");
+        return;
+    }
+    if (pasoActual === 6 && !userSession.conclusionSeleccionada) {
+        alert("¡Elige si tu hipótesis fue confirmada o refutada con tus resultados!");
+        return;
+    }
+    cambiarPaso(pasoSiguiente);
+}
+
+function poblarOpcionesPaso1(exp) {
+    const contenedor = document.getElementById("quiz-obs-options");
+    if (!contenedor) return;
+    contenedor.innerHTML = "";
+    exp.preguntasObs.forEach(texto => {
+        const opt = document.createElement("div");
+        opt.className = "quiz-option";
+        opt.innerText = texto;
+        opt.onclick = () => {
+            contenedor.querySelectorAll(".quiz-option").forEach(o => o.classList.remove("selected"));
+            opt.classList.add("selected");
+            userSession.observacionSeleccionada = texto;
+        };
+        contenedor.appendChild(opt);
+    });
+}
+
+function poblarOpcionesPaso2(exp) {
+    const contenedor = document.getElementById("quiz-problema-options");
+    if (!contenedor) return;
+    contenedor.innerHTML = "";
+    exp.preguntasProb.forEach(texto => {
+        const opt = document.createElement("div");
+        opt.className = "quiz-option";
+        opt.innerText = texto;
+        opt.onclick = () => {
+            contenedor.querySelectorAll(".quiz-option").forEach(o => o.classList.remove("selected"));
+            opt.classList.add("selected");
+            userSession.problemaSeleccionado = texto;
+        };
+        contenedor.appendChild(opt);
+    });
+}
+
+function toggleCustomInput(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle("hidden");
+}
+
+function poblarConstructorPaso3(exp) {
+    const selectCond = document.getElementById("hb-condicion");
+    const selectEf = document.getElementById("hb-efecto");
+    if (!selectCond || !selectEf) return;
+
+    selectCond.innerHTML = "";
+    selectEf.innerHTML = "";
+
+    exp.hipCondiciones.forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c; opt.textContent = c;
+        selectCond.appendChild(opt);
+    });
+
+    exp.hipEfectos.forEach(e => {
+        const opt = document.createElement("option");
+        opt.value = e; opt.textContent = e;
+        selectEf.appendChild(opt);
+    });
+
+    actualizarPrevisualizacionHipotesis();
+}
+
+function actualizarPrevisualizacionHipotesis() {
+    const c = document.getElementById("hb-condicion").value;
+    const e = document.getElementById("hb-efecto").value;
+    userSession.hipotesisCondicion = c;
+    userSession.hipotesisEfecto = e;
+    if ($("hb-preview-text")) {
+        $("hb-preview-text").innerText = `"Si ${c.toLowerCase()}, entonces ${e.toLowerCase()}."`;
+    }
+}
+
+function poblarOpcionesPaso5(exp) {
+    const contenedor = document.getElementById("quiz-analisis-options");
+    if (!contenedor) return;
+    contenedor.innerHTML = "";
+    exp.analisisOpciones.forEach(txt => {
+        const opt = document.createElement("div");
+        opt.className = "quiz-option";
+        opt.innerText = txt;
+        opt.onclick = () => {
+            contenedor.querySelectorAll(".quiz-option").forEach(o => o.classList.remove("selected"));
+            opt.classList.add("selected");
+            userSession.analisisSeleccionado = txt;
+        };
+        contenedor.appendChild(opt);
+    });
+}
+
+function poblarOpcionesPaso6(exp) {
+    const contenedor = document.getElementById("quiz-conclusion-options");
+    if (!contenedor) return;
+    contenedor.innerHTML = "";
+    exp.conclusionesOpciones.forEach(txt => {
+        const opt = document.createElement("div");
+        opt.className = "quiz-option";
+        opt.innerText = txt;
+        opt.onclick = () => {
+            contenedor.querySelectorAll(".quiz-option").forEach(o => o.classList.remove("selected"));
+            opt.classList.add("selected");
+            userSession.conclusionSeleccionada = txt;
+        };
+        contenedor.appendChild(opt);
+    });
+}
+
+function poblarOpcionesPaso7(exp) {
+    const contenedor = document.getElementById("quiz-comunicacion-options");
+    if (!contenedor) return;
+    contenedor.innerHTML = "";
+    exp.titularesCom.forEach(txt => {
+        const opt = document.createElement("div");
+        opt.className = "quiz-option";
+        opt.innerText = txt;
+        opt.onclick = () => {
+            contenedor.querySelectorAll(".quiz-option").forEach(o => o.classList.remove("selected"));
+            opt.classList.add("selected");
+            userSession.comunicacionTitular = txt;
+        };
+        contenedor.appendChild(opt);
+    });
+}
+
+/* SIMULADORES EN VIVO CANVA */
+let simVars = { param1: 35 };
+
+function configurarSimuladorPaso4(exp) {
+    const contenedor = document.getElementById("sim-controls-container");
+    if (!contenedor) return;
+    contenedor.innerHTML = "";
+    if ($("tabla-registros")) {
+        $("tabla-registros").innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--muted);">Aún no has hecho ensayos. ¡Presiona los botones para registrar datos!</td></tr>`;
+    }
+
+    if (exp.simTipo === "fuerza" || exp.simTipo === "choque" || exp.simTipo === "newton") {
+        simVars.fuerza = 14;
+        simVars.masa = 2.0;
+
+        contenedor.innerHTML = `
+            <div class="control-item" style="margin-bottom: 12px;">
+                <div class="control-header" style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                    <span>Fuerza Aplicada: <b id="val-ctrl-fuerza">14</b> N</span>
+                </div>
+                <input type="range" class="slider" min="5" max="80" value="14" oninput="actualizarVarFuerza(this.value)">
+            </div>
+            <div class="control-item" style="margin-bottom: 15px;">
+                <div class="control-header" style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                    <span>Masa del Carro: <b id="val-ctrl-masa">2.0</b> kg</span>
+                </div>
+                <input type="range" class="slider" min="0.5" max="5.0" step="0.5" value="2.0" oninput="actualizarVarMasa(this.value)">
+            </div>
+            <button class="btn btn-neon" style="background:#10b981; color:#fff;" onclick="lanzarPruebaNewton()">▶ Aplicar Impulso y Medir</button>
+        `;
+    } else if (exp.simTipo === "ph") {
+        simVars.param1 = 7.0;
+        contenedor.innerHTML = `
+            <div class="btn-duo" style="margin-top:0;">
+                <button class="btn btn-muted btn-sm" onclick="accionarReactivoPH('acido')">+ Ácido Clorhídrico</button>
+                <button class="btn btn-muted btn-sm" onclick="accionarReactivoPH('base')">+ Hidróxido de Sodio</button>
+            </div>
+            <div style="text-align:center; margin-top:10px; font-size:0.85rem;">
+                pH de la solución: <b id="val-ph-live" style="color:var(--cyan); font-size:1.1rem;">7.00</b>
+            </div>
+        `;
+    } else if (exp.simTipo === "circuito") {
+        simVars.param1 = 9;
+        contenedor.innerHTML = `
+            <div class="control-item">
+                <div class="control-header"><span>Voltaje: <b id="val-ctrl1">9</b> V</span></div>
+                <input type="range" class="slider" min="1" max="24" value="9" oninput="actualizarSlider(1, this.value, ' V')">
+            </div>
+            <button class="btn btn-neon" onclick="ejecutarEnsayoSimulado('Cierre de Interruptor')">💡 Medir Intensidad Lumínica</button>
+        `;
+    } else if (exp.simTipo === "pendulo") {
+        simVars.param1 = 45; 
+        contenedor.innerHTML = `
+            <div class="control-item">
+                <div class="control-header"><span>Amplitud / Apertura: <b id="val-ctrl1">45</b>°</span></div>
+                <input type="range" class="slider" min="15" max="85" value="45" oninput="actualizarSlider(1, this.value, '°')">
+            </div>
+            <button class="btn btn-neon" onclick="ejecutarEnsayoSimulado('Medición de Péndulo')">⏱️ Registrar Lectura del Péndulo</button>
+        `;
+    } else {
+        simVars.param1 = 50;
+        contenedor.innerHTML = `
+            <div class="control-item">
+                <div class="control-header"><span>Intensidad de Entrada: <b id="val-ctrl1">50</b> %</span></div>
+                <input type="range" class="slider" min="10" max="100" value="50" oninput="actualizarSlider(1, this.value, ' %')">
+            </div>
+            <button class="btn btn-neon" onclick="ejecutarEnsayoSimulado('Medición Sensorial')">🚀 Registrar Lectura</button>
+        `;
+    }
+}
+
+function actualizarVarFuerza(val) {
+    simVars.fuerza = parseFloat(val);
+    const tag = document.getElementById("val-ctrl-fuerza");
+    if (tag) tag.innerText = val;
+}
+
+function actualizarVarMasa(val) {
+    simVars.masa = parseFloat(val);
+    const tag = document.getElementById("val-ctrl-masa");
+    if (tag) tag.innerText = parseFloat(val).toFixed(1);
+}
+
+function lanzarPruebaNewton() {
+    const fuerza = simVars.fuerza || 14;
+    const masa = simVars.masa || 2.0;
+    const aceleracion = (fuerza / masa).toFixed(2);
+
+    simVars.impulsoActivo = true;
+    simVars.velocidadAcc = parseFloat(aceleracion);
+
+    registrarFilaTabla(
+        `F = ${fuerza} N, m = ${masa} kg`, 
+        `Aceleración = ${aceleracion} m/s²`, 
+        "Completado"
+    );
+}
+
+function actualizarSlider(num, val, unit) {
+    simVars.param1 = parseFloat(val);
+    const tag = document.getElementById(`val-ctrl${num}`);
+    if (tag) tag.innerText = val + unit;
+}
+
+function accionarReactivoPH(tipo) {
+    if (tipo === 'acido') {
+        simVars.param1 = Math.max(1.0, simVars.param1 - 1.2);
+    } else {
+        simVars.param1 = Math.min(14.0, simVars.param1 + 1.2);
+    }
+    const valTag = document.getElementById("val-ph-live");
+    if (valTag) valTag.innerText = simVars.param1.toFixed(2);
+
+    registrarFilaTabla(`Gotas de ${tipo.toUpperCase()}`, `pH = ${simVars.param1.toFixed(2)}`, simVars.param1 < 7 ? "Ácido" : simVars.param1 > 7 ? "Base" : "Neutro");
+}
+
+function ejecutarEnsayoSimulado(nombreAccion) {
+    let medicion = "";
+    let estado = "Normal";
+
+    if (expActual.simTipo === "fuerza") {
+        const acel = (simVars.param1 / 2.5).toFixed(2);
+        medicion = `Aceleración: ${acel} m/s²`;
+        estado = acel > 20 ? "Aceleración Alta" : "Aceleración Media";
+    } else if (expActual.simTipo === "circuito") {
+        const amperes = (simVars.param1 / 10).toFixed(2);
+        medicion = `Corriente: ${amperes} A`;
+        estado = amperes > 1.5 ? "Foco Muy Brillante" : "Brillo Normal";
+    } else {
+        medicion = `Respuesta = ${(simVars.param1 * 1.34).toFixed(1)} unidades`;
+        estado = "Registro Válido";
+    }
+
+    registrarFilaTabla(`${nombreAccion} (${simVars.param1})`, medicion, estado);
+}
+
+function registrarFilaTabla(control, resultado, estado) {
+    const tabla = document.getElementById("tabla-registros");
+    if (!tabla) return;
+    if (userSession.ensayos.length === 0) tabla.innerHTML = "";
+
+    const num = userSession.ensayos.length + 1;
+    userSession.ensayos.push({ num, control, resultado, estado });
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+        <td><b>#${num}</b></td>
+        <td>${control}</td>
+        <td style="color:var(--cyan); font-weight:600;">${resultado}</td>
+        <td><span class="pill">${estado}</span></td>
+    `;
+    tabla.appendChild(tr);
+    experiments++;
+    addActivity(`Ensayo #${num} en ${expActual ? expActual.titulo : 'Experimento'}`);
+}
+
+function detenerCanvasAnim() {
+    if (animId) {
+        cancelAnimationFrame(animId);
+        animId = null;
+    }
+}
+
+function arrancarCanvas(canvasId, tipo, esDemo) {
+    detenerCanvasAnim();
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+
+    let xPos = 40;
+    let t = 0;
+    let velocidadActual = 0;
+    let carroEnElBorde = false;
+    let isDragging = false;
+
+    if (simVars.anguloPendulo === undefined) {
+        simVars.anguloPendulo = (45 * Math.PI) / 180;
+        simVars.velAngular = 0;
+        simVars.isDraggingPendulo = false;
+    }
+
+    if ((tipo === "fuerza" || tipo === "choque" || tipo === "newton") && !canvas._dragListenersAttached) {
+        canvas._dragListenersAttached = true;
+
+        const iniciarCarro = (clientX, clientY) => {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = (clientX - rect.left) * (canvas.width / rect.width);
+            const mouseY = (clientY - rect.top) * (canvas.height / rect.height);
+            if (mouseX >= xPos - 15 && mouseX <= xPos + 75 && mouseY >= canvas.height - 75 && mouseY <= canvas.height - 20) {
+                isDragging = true;
+            }
+        };
+
+        const moverCarro = (clientX) => {
+            if (!isDragging) return;
+            const rect = canvas.getBoundingClientRect();
+            let mouseX = (clientX - rect.left) * (canvas.width / rect.width);
+            xPos = Math.max(40, Math.min(mouseX - 30, canvas.width - 70));
+            velocidadActual = 0;
+            if (xPos < canvas.width - 70) carroEnElBorde = false;
+        };
+
+        const soltarCarro = () => { isDragging = false; };
+
+        canvas.addEventListener('mousedown', (e) => iniciarCarro(e.clientX, e.clientY));
+        window.addEventListener('mousemove', (e) => moverCarro(e.clientX));
+        window.addEventListener('mouseup', soltarCarro);
+
+        canvas.addEventListener('touchstart', (e) => {
+            if (e.touches.length > 0) iniciarCarro(e.touches[0].clientX, e.touches[0].clientY);
+        });
+        window.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 0) moverCarro(e.touches[0].clientX);
+        });
+        window.addEventListener('touchend', soltarCarro);
+    }
+
+    if (tipo === "pendulo" && !canvas._penduloListenersAttached) {
+        canvas._penduloListenersAttached = true;
+        const cx = canvas.width / 2;
+        const cy = 30;
+        const longitudCuerda = 120;
+
+        const iniciarPendulo = (clientX, clientY) => {
+            const rect = canvas.getBoundingClientRect();
+            const mx = (clientX - rect.left) * (canvas.width / rect.width);
+            const my = (clientY - rect.top) * (canvas.height / rect.height);
+
+            const xEsfera = cx + longitudCuerda * Math.sin(simVars.anguloPendulo);
+            const yEsfera = cy + longitudCuerda * Math.cos(simVars.anguloPendulo);
+
+            const distancia = Math.hypot(mx - xEsfera, my - yEsfera);
+            if (distancia < 40) {
+                simVars.isDraggingPendulo = true;
+                simVars.velAngular = 0;
+            }
+        };
+
+        const moverPendulo = (clientX, clientY) => {
+            if (!simVars.isDraggingPendulo) return;
+            const rect = canvas.getBoundingClientRect();
+            const mx = (clientX - rect.left) * (canvas.width / rect.width);
+            const my = (clientY - rect.top) * (canvas.height / rect.height);
+
+            const dx = mx - cx;
+            const dy = my - cy;
+            let nuevoAngulo = Math.atan2(dx, dy);
+
+            const limiteMax = (75 * Math.PI) / 180;
+            simVars.anguloPendulo = Math.max(-limiteMax, Math.min(limiteMax, nuevoAngulo));
+            simVars.velAngular = 0;
+
+            const gradosActuales = Math.round((Math.abs(simVars.anguloPendulo) * 180) / Math.PI);
+            simVars.param1 = gradosActuales;
+
+            const tagCtrl = document.getElementById("val-ctrl1");
+            if (tagCtrl) tagCtrl.innerText = gradosActuales + "°";
+            const sliderCtrl = document.querySelector(".controls-card .slider");
+            if (sliderCtrl) sliderCtrl.value = gradosActuales;
+        };
+
+        const soltarPendulo = () => { simVars.isDraggingPendulo = false; };
+
+        canvas.addEventListener('mousedown', (e) => iniciarPendulo(e.clientX, e.clientY));
+        window.addEventListener('mousemove', (e) => moverPendulo(e.clientX, e.clientY));
+        window.addEventListener('mouseup', soltarPendulo);
+
+        canvas.addEventListener('touchstart', (e) => {
+            if (e.touches.length > 0) iniciarPendulo(e.touches[0].clientX, e.touches[0].clientY);
+        });
+        window.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 0) moverPendulo(e.touches[0].clientX, e.touches[0].clientY);
+        });
+        window.addEventListener('touchend', soltarPendulo);
+    }
+
+    function render() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        t += 0.04;
+
+        if (tipo === "fuerza" || tipo === "choque" || tipo === "newton") {
+            ctx.strokeStyle = "#1e293b";
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height - 30);
+            ctx.lineTo(canvas.width, canvas.height - 30);
+            ctx.stroke();
+
+            if (esDemo) {
+                xPos = 120 + Math.sin(t * 2) * 80;
+            } else {
+                if (simVars.impulsoActivo) {
+                    velocidadActual = (simVars.velocidadAcc || 2.0) * 0.4;
+                    simVars.impulsoActivo = false;
+                    carroEnElBorde = false;
+                }
+
+                if (!isDragging) {
+                    if (velocidadActual > 0.05) {
+                        xPos += velocidadActual;
+                        velocidadActual *= 0.96; 
+                    } else {
+                        velocidadActual = 0;
+                    }
+                }
+
+                if (xPos >= canvas.width - 70 && velocidadActual <= 0.05 && !isDragging) {
+                    xPos = canvas.width - 70;
+                    velocidadActual = 0;
+                    carroEnElBorde = true;
+                }
+
+                if (sensorActivo) {
+                    xPos += sensorTilt * 2;
+                }
+            }
+
+            ctx.fillStyle = isDragging ? "#10b981" : "#00e5ff";
+            ctx.shadowColor = isDragging ? "#10b981" : "#00e5ff";
+            ctx.shadowBlur = 10;
+            ctx.fillRect(xPos, canvas.height - 65, 60, 25);
+            ctx.shadowBlur = 0;
+
+            ctx.fillStyle = "#ffffff";
+            ctx.beginPath();
+            ctx.arc(xPos + 12, canvas.height - 38, 7, 0, Math.PI * 2);
+            ctx.arc(xPos + 48, canvas.height - 38, 7, 0, Math.PI * 2);
+            ctx.fill();
+
+            if (carroEnElBorde && !esDemo) {
+                ctx.fillStyle = "rgba(10, 14, 20, 0.85)";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                ctx.fillStyle = "#00e5ff";
+                ctx.font = "bold 14px system-ui, sans-serif";
+                ctx.textAlign = "center";
+                ctx.fillText("⚠️ ¡El carro se ha detenido al final de la pista!", canvas.width / 2, canvas.height / 2 - 15);
+
+                ctx.fillStyle = "#ffffff";
+                ctx.font = "12px system-ui, sans-serif";
+                ctx.fillText("👆 Mantén presionado y desliza el carro hacia la izquierda para reiniciar", canvas.width / 2, canvas.height / 2 + 10);
+                ctx.textAlign = "left";
+            }
+
+        } else if (tipo === "ph") {
+            const cx = canvas.width / 2;
+            const cy = canvas.height / 2;
+            const col = simVars.param1 < 6 ? "#ef4444" : simVars.param1 > 8 ? "#a855f7" : "#10b981";
+
+            ctx.fillStyle = col;
+            ctx.shadowColor = col;
+            ctx.shadowBlur = 15;
+            ctx.fillRect(cx - 50, cy - 20, 100, 100);
+            ctx.shadowBlur = 0;
+
+            ctx.strokeStyle = "#94a3b8";
+            ctx.lineWidth = 4;
+            ctx.strokeRect(cx - 55, cy - 30, 110, 115);
+
+        } else if (tipo === "pendulo") {
+            const cx = canvas.width / 2;
+            const cy = 30;
+            const longitudCuerda = 120;
+            const g = 0.4;
+
+            if (!simVars.isDraggingPendulo) {
+                const aceleracionAngular = (-g / longitudCuerda) * Math.sin(simVars.anguloPendulo);
+                simVars.velAngular += aceleracionAngular;
+                simVars.anguloPendulo += simVars.velAngular;
+                simVars.velAngular *= 0.998;
+            }
+
+            const xEsfera = cx + longitudCuerda * Math.sin(simVars.anguloPendulo);
+            const yEsfera = cy + longitudCuerda * Math.cos(simVars.anguloPendulo);
+
+            ctx.fillStyle = "#94a3b8";
+            ctx.fillRect(cx - 20, cy - 10, 40, 8);
+
+            ctx.strokeStyle = simVars.isDraggingPendulo ? "#10b981" : "#38bdf8";
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.lineTo(xEsfera, yEsfera);
+            ctx.stroke();
+
+            ctx.fillStyle = simVars.isDraggingPendulo ? "#10b981" : "#a855f7";
+            ctx.shadowColor = simVars.isDraggingPendulo ? "#10b981" : "#a855f7";
+            ctx.shadowBlur = 15;
+            ctx.beginPath();
+            ctx.arc(xEsfera, yEsfera, 16, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+        } else if (tipo === "circuito") {
+            const cx = canvas.width / 2;
+            const cy = canvas.height / 2;
+            const V = simVars.param1 || 9;
+
+            ctx.strokeStyle = "#00e5ff";
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.strokeRect(cx - 160, cy - 70, 320, 140);
+
+            ctx.fillStyle = "#0a0e14";
+            ctx.fillRect(cx - 165, cy - 25, 10, 50);
+            
+            ctx.fillStyle = "#f59e0b";
+            ctx.fillRect(cx - 170, cy - 20, 20, 40);
+            ctx.fillStyle = "#ffffff";
+            ctx.font = "bold 11px sans-serif";
+            ctx.fillText(`${V}V`, cx - 198, cy + 5);
+
+            ctx.fillStyle = "#0a0e14";
+            ctx.fillRect(cx - 30, cy - 75, 60, 10);
+            ctx.strokeStyle = "#10b981";
+            ctx.beginPath();
+            ctx.moveTo(cx - 25, cy - 70);
+            ctx.lineTo(cx + 25, cy - 70);
+            ctx.stroke();
+
+            ctx.fillStyle = "#0a0e14";
+            ctx.fillRect(cx + 155, cy - 20, 10, 40);
+            ctx.strokeStyle = "#a855f7";
+            ctx.beginPath();
+            ctx.moveTo(cx + 160, cy - 20);
+            ctx.lineTo(cx + 170, cy - 10);
+            ctx.lineTo(cx + 150, cy);
+            ctx.lineTo(cx + 170, cy + 10);
+            ctx.lineTo(cx + 160, cy + 20);
+            ctx.stroke();
+
+            const brillo = Math.min(1, V / 15);
+            ctx.fillStyle = `rgba(255, 235, 59, ${0.2 + brillo * 0.8})`;
+            ctx.shadowColor = "#ffee55";
+            ctx.shadowBlur = brillo * 25;
+
+            ctx.beginPath();
+            ctx.arc(cx, cy + 70, 20, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+            ctx.strokeStyle = "#ffffff";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(cx, cy + 70, 8, Math.PI, 0);
+            ctx.stroke();
+
+            ctx.fillStyle = "#00e5ff";
+            const numElectrones = 8;
+            for (let i = 0; i < numElectrones; i++) {
+                const pos = ((t * 60 + i * (640 / numElectrones)) % 640);
+                let ex = cx - 160, ey = cy - 70;
+                if (pos < 320) {
+                    ex = cx - 160 + pos; ey = cy - 70;
+                } else if (pos < 460) {
+                    ex = cx + 160; ey = cy - 70 + (pos - 320);
+                } else if (pos < 640) {
+                    ex = cx + 160 - (pos - 460); ey = cy + 70;
+                }
+                ctx.beginPath();
+                ctx.arc(ex, ey, 3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
         } else {
-            rankTitle.textContent = "🌱 Explorador Novato";
-            rankTitle.style.color = "#00e5ff";
+            ctx.strokeStyle = "#a855f7";
+            ctx.lineWidth = 3;
+            ctx.shadowColor = "#a855f7";
+            ctx.shadowBlur = 8;
+            ctx.beginPath();
+            for (let i = 0; i < canvas.width; i += 20) {
+                let y = (canvas.height / 2) + Math.sin(t + i * 0.05) * 35;
+                if (i === 0) ctx.moveTo(i, y);
+                else ctx.lineTo(i, y);
+            }
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+        }
+
+        animId = requestAnimationFrame(render);
+    }
+    render();
+}
+
+function detectarSensores() {
+    if (window.DeviceMotionEvent && document.getElementById("sensor-btn-box")) {
+        document.getElementById("sensor-btn-box").classList.remove("hidden");
+    }
+}
+
+function activarAcelerometroMovil() {
+    if (typeof DeviceMotionEvent.requestPermission === 'function') {
+        DeviceMotionEvent.requestPermission().then(state => {
+            if (state === 'granted') escucharMovimiento();
+        }).catch(console.warn);
+    } else {
+        escucharMovimiento();
+    }
+}
+
+function escucharMovimiento() {
+    window.addEventListener("devicemotion", (e) => {
+        if (e.accelerationIncludingGravity) {
+            sensorTilt = e.accelerationIncludingGravity.x || 0;
+            sensorActivo = true;
+        }
+    });
+    alert("¡Sensor de inclinación vinculado! Mueve tu móvil para interactuar.");
+}
+
+/* EVALUACIÓN FINAL MISIONES */
+async function ejecutarEvaluacionFinal() {
+    document.getElementById("vista-laboratorio").classList.add("hidden");
+    document.getElementById("vista-evaluacion").classList.remove("hidden");
+
+    const loader = document.getElementById("eval-loader");
+    const content = document.getElementById("eval-content");
+    const motorTag = document.getElementById("eval-motor");
+    const rankTag = document.getElementById("eval-badge-rank");
+
+    if (loader) loader.classList.remove("hidden");
+    if (content) content.innerHTML = "";
+
+    const inputObs = document.getElementById("input-obs-extra");
+    const inputConc = document.getElementById("input-conclusion-texto");
+    if (inputObs) userSession.observacionLibre = inputObs.value.trim();
+    if (inputConc) userSession.conclusionTexto = inputConc.value.trim();
+
+    const apiKey = localStorage.getItem("nexora_gemini_key");
+    let dictamen = null;
+
+    if (navigator.onLine && apiKey) {
+        try {
+            if (motorTag) motorTag.innerText = "IA Global Cloud (Google Gemini)";
+            dictamen = await consultarIAGlobalGemini(apiKey);
+        } catch (err) {
+            console.warn("Fallo nube, conmutando a IA Local Heurística:", err);
+            if (motorTag) motorTag.innerText = "IA Local Autónoma (Offline)";
+            dictamen = evaluarConIALocalAdaptada();
+        }
+    } else {
+        if (motorTag) motorTag.innerText = "IA Local Autónoma (Offline)";
+        dictamen = evaluarConIALocalAdaptada();
+    }
+
+    if (loader) loader.classList.add("hidden");
+
+    if (rankTag) {
+        if (dictamen.puntaje >= 90) {
+            rankTag.innerText = "🏆 Maestro del Cosmos";
+            rankTag.style.background = "linear-gradient(90deg, #10b981, #00e5ff)";
+        } else if (dictamen.puntaje >= 75) {
+            rankTag.innerText = "⚡ Investigador Cuántico";
+            rankTag.style.background = "linear-gradient(90deg, #f59e0b, #ec4899)";
+        } else {
+            rankTag.innerText = "🌱 Explorador Novato";
+            rankTag.style.background = "linear-gradient(90deg, #3b82f6, #8b5cf6)";
         }
     }
 
-    const container = $("activityHistory");
-    if (!container) return;
-
-    if (history.length === 0) {
-        container.innerHTML = `<div style="text-align:center; padding:20px; color:var(--muted);">Todavía no tienes actividades registradas.</div>`;
-        return;
-    }
-
-    container.innerHTML = history.map(item => `
-        <div class="history-item">
-            <div>
-                <strong>${escapeHTML(item.description)}</strong>
-                <small>${escapeHTML(item.date)}</small>
+    let htmlPasos = "";
+    dictamen.rubrica.forEach(item => {
+        htmlPasos += `
+            <div class="eval-step-row ${item.aprobado ? 'pass' : 'warn'}">
+                <b>${item.aprobado ? '✔ Logrado' : '⚠️ Atención'} - ${item.paso}:</b>
+                <p style="color:var(--muted); margin-top:2px;">${item.mensaje}</p>
             </div>
-            <span class="pill-status" style="font-size:10px;">Registrado</span>
-        </div>
-    `).join("");
+        `;
+    });
+
+    if (content) {
+        content.innerHTML = `
+            <div class="score-display">${dictamen.puntaje} / 100 PTS</div>
+            <p style="text-align:center; font-size:0.9rem; color:var(--text); margin-bottom:16px;">${dictamen.mensajeGeneral}</p>
+            <div>${htmlPasos}</div>
+        `;
+    }
 }
 
-function escapeHTML(value) {
-    return String(value).replace(/[&<>"']/g, c => ({
-        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
-    })[c]);
-}
+function evaluarConIALocalAdaptada() {
+    let score = 0;
+    let rubrica = [];
 
-// ==========================================================================
-// GESTIÓN DE TEMA Y RED
-// ==========================================================================
-function toggleTheme() {
-    const html = document.documentElement;
-    const current = html.getAttribute("data-theme") || "dark";
-    const next = current === "light" ? "dark" : "light";
-    html.setAttribute("data-theme", next);
-    localStorage.setItem("nexora_theme", next);
-    const btn = $("btn-theme");
-    if (btn) btn.innerText = next === "light" ? "☀️" : "🌙";
-}
-
-function cargarTemaGuardado() {
-    const saved = localStorage.getItem("nexora_theme") || "dark";
-    document.documentElement.setAttribute("data-theme", saved);
-    const btn = $("btn-theme");
-    if (btn) btn.innerText = saved === "light" ? "☀️" : "🌙";
-}
-
-function syncRed() {
-    const pill = $("estado-red");
-    if (!pill) return;
-    if (navigator.onLine) {
-        pill.innerText = "🟢 En línea";
-        pill.className = "pill-status";
+    if (userSession.observacionSeleccionada) {
+        score += 15;
+        rubrica.push({ paso: "1. Observación", aprobado: true, mensaje: "Identificaste el fenómeno físico con precisión visual." });
     } else {
-        pill.innerText = "🔴 Sin conexión (IA Local)";
-        pill.className = "pill-status";
-        pill.style.borderColor = "#f97316";
-        pill.style.color = "#f97316";
+        rubrica.push({ paso: "1. Observación", aprobado: false, mensaje: "No seleccionaste ninguna observación concreta." });
     }
-}
-window.addEventListener("online", syncRed);
-window.addEventListener("offline", syncRed);
 
-// ==========================================================================
-// SESIÓN DE ESTUDIANTE (LOGIN & LOGOUT)
-// ==========================================================================
-function enterApp(name) {
-    student = name;
-    localStorage.setItem("nexoraStudent", student);
-
-    $("loginScreen").classList.add("hidden");
-    $("app").classList.remove("hidden");
-
-    if ($("welcomeName")) $("welcomeName").textContent = student;
-    if ($("heroName")) $("heroName").textContent = student;
-
-    updateProgressUI();
-}
-
-$("loginForm").addEventListener("submit", function(e) {
-    e.preventDefault();
-    const name = $("studentName").value.trim();
-    const password = $("studentPassword").value;
-
-    if (name.length < 2 || password.length < 4) {
-        alert("Escribe un nombre de al menos 2 caracteres y una contraseña de 4.");
-        return;
+    if (userSession.problemaSeleccionado) {
+        score += 15;
+        rubrica.push({ paso: "2. Planteamiento", aprobado: true, mensaje: "Formulaste una pregunta con relación causal de variables." });
     }
-    enterApp(name);
-});
 
-$("logoutBtn").addEventListener("click", function() {
-    localStorage.removeItem("nexoraStudent");
-    student = "";
-    $("app").classList.add("hidden");
-    $("loginScreen").classList.remove("hidden");
-});
+    if (userSession.hipotesisCondicion && userSession.hipotesisEfecto) {
+        score += 20;
+        rubrica.push({ paso: "3. Hipótesis", aprobado: true, mensaje: `Excelente construcción lógica: 'Si ${userSession.hipotesisCondicion}, entonces ${userSession.hipotesisEfecto}'.` });
+    }
 
-function loginAsCitlali() {
-    $("studentName").value = "citlali";
-    $("studentPassword").value = "1234";
-    enterApp("citlali");
-}
+    if (userSession.ensayos.length >= 2) {
+        score += 20;
+        rubrica.push({ paso: "4. Experimentación", aprobado: true, mensaje: `Rigor científico: ejecutaste ${userSession.ensayos.length} pruebas controladas en el simulador.` });
+    } else {
+        score += 5;
+        rubrica.push({ paso: "4. Experimentación", aprobado: false, mensaje: "Hiciste menos de 2 ensayos; se requieren repeticiones para verificar consistencia." });
+    }
 
-// ==========================================================================
-// NAVEGACIÓN ENTRE SECCIONES
-// ==========================================================================
-function showSection(sectionId) {
-    document.querySelectorAll(".section").forEach(s => s.classList.remove("active-section"));
-    document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+    if (userSession.conclusionSeleccionada.includes("confirma") || userSession.conclusionSeleccionada.includes("valida")) {
+        score += 15;
+        rubrica.push({ paso: "5 & 6. Análisis y Conclusión", aprobado: true, mensaje: "Contrastaste con acierto las mediciones contra tu hipótesis." });
+    } else {
+        score += 10;
+        rubrica.push({ paso: "5 & 6. Análisis y Conclusión", aprobado: true, mensaje: "Conclusión honesta con base en datos empíricos." });
+    }
 
-    const sec = $(sectionId);
-    if (!sec) return;
-    sec.classList.add("active-section");
+    if (userSession.comunicacionTitular) {
+        score += 15;
+        rubrica.push({ paso: "7. Divulgación", aprobado: true, mensaje: "Elegiste un titular claro y atractivo para la comunidad científica." });
+    }
 
-    const activeBtn = document.querySelector(`.nav-btn[data-section="${sectionId}"]`);
-    if (activeBtn) activeBtn.classList.add("active");
-
-    const titles = {
-        inicio: { t: "Bienvenido al laboratorio", s: "Explora, experimenta y descubre." },
-        fisica: { t: "Laboratorio de Física", s: "Movimiento, velocidad, electricidad y energía." },
-        quimica: { t: "Laboratorio de Química", s: "Materia, mezclas, átomos y transformaciones." },
-        biologia: { t: "Laboratorio de Biología", s: "Células, seres vivos y procesos naturales." },
-        misiones: { t: "Misiones Científicas Pro", s: "El método científico en 7 pasos con 18 laboratorios guiados." },
-        evaluacion: { t: "Evaluaciones Científicas", s: "Responde preguntas y comprueba lo que has aprendido." },
-        progreso: { t: "Mi progreso", s: "Consulta las actividades y experimentos que has realizado." },
-        ia: { t: "Asistente NEXOR-IA", s: "Tu tutor científico personal en tiempo real." }
+    return {
+        puntaje: score,
+        mensajeGeneral: score >= 80 
+            ? "¡Trabajo científico sobresaliente! Demostraste pensamiento crítico y análisis cuantitativo impecable." 
+            : "¡Buen intento! Desarrollaste el método científico con éxito, aunque puedes mejorar realizando más ensayos experimentales.",
+        rubrica
     };
-
-    const current = titles[sectionId] || { t: "Nexora LAB", s: "Laboratorio Virtual" };
-    if ($("pageTitle")) $("pageTitle").textContent = current.t;
-    if ($("pageSubtitle")) $("pageSubtitle").textContent = current.s;
-
-    if (sectionId === "progreso") updateProgressUI();
-    if (sectionId === "misiones" && !expActual) {
-        renderListaMisiones();
-    }
-    window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-document.querySelectorAll(".nav-btn").forEach(btn => {
-    btn.addEventListener("click", () => showSection(btn.dataset.section));
-});
+async function consultarIAGlobalGemini(apiKey) {
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
-// ==========================================================================
-// SIMULADORES RÁPIDOS: FÍSICA
-// ==========================================================================
+    const prompt = `
+Eres un tutor de ciencias juvenil y motivador evaluando a un estudiante de ${nivelActual} (12-18 años).
+Tema: ${expActual.titulo}.
+Respuestas del alumno:
+- Observación: ${userSession.observacionSeleccionada}
+- Pregunta: ${userSession.problemaSeleccionado}
+- Hipótesis: Si ${userSession.hipotesisCondicion}, entonces ${userSession.hipotesisEfecto}.
+- Ensayos en tabla: ${userSession.ensayos.length} pruebas realizadas.
+- Análisis: ${userSession.analisisSeleccionado}
+- Conclusión: ${userSession.conclusionSeleccionada}
+
+Devuelve ÚNICAMENTE un JSON válido con esta estructura estricta:
+{
+  "puntaje": [un número entre 60 y 100],
+  "mensajeGeneral": "[mensaje motivador para el joven de 2 líneas]",
+  "rubrica": [
+    {"paso": "Observación y Pregunta", "aprobado": true, "mensaje": "..."},
+    {"paso": "Hipótesis Causal", "aprobado": true, "mensaje": "..."},
+    {"paso": "Experimentación y Análisis", "aprobado": true, "mensaje": "..."},
+    {"paso": "Conclusión Crítica", "aprobado": true, "mensaje": "..."}
+  ]
+}
+`;
+
+    const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+    });
+
+    if (!res.ok) throw new Error("Fallo en API Nube");
+
+    const data = await res.json();
+    let text = data.candidates[0].content.parts[0].text;
+    text = text.replace(/```json/g, "").replace(/```/g, "").trim();
+    return JSON.parse(text);
+}
+
+function revisarPasoActual() {
+    document.getElementById("vista-evaluacion").classList.add("hidden");
+    document.getElementById("vista-laboratorio").classList.remove("hidden");
+    cambiarPaso(5);
+}
+
+function reiniciarALista() {
+    detenerCanvasAnim();
+    document.getElementById("vista-evaluacion").classList.add("hidden");
+    document.getElementById("menu-materias").classList.remove("hidden");
+}
+
+let circuitoEstado = { bateria: false, cable: false, foco: false };
+
+function abrirConstructorCircuito() {
+    circuitoEstado = { bateria: false, cable: false, foco: false };
+    if ($("modal-builder-circuito")) $("modal-builder-circuito").classList.remove("hidden");
+    if ($("builder-step-tag")) $("builder-step-tag").innerText = "Paso 1 de 3";
+    if ($("builder-instruction")) $("builder-instruction").innerText = "1. Haz clic en la Batería para energizar el circuito:";
+    if ($("btn-comp-bateria")) $("btn-comp-bateria").classList.remove("hidden");
+    if ($("btn-comp-cable")) $("btn-comp-cable").classList.add("hidden");
+    if ($("btn-comp-foco")) $("btn-comp-foco").classList.add("hidden");
+    if ($("btn-finish-circuit")) $("btn-finish-circuit").classList.add("hidden");
+    if ($("builder-preview")) $("builder-preview").innerHTML = "<i>Tablero de pruebas listo...</i>";
+}
+
+function agregarComponenteCircuito(tipo) {
+    const preview = document.getElementById("builder-preview");
+    
+    if (tipo === 'bateria') {
+        circuitoEstado.bateria = true;
+        if (preview) preview.innerHTML = "🔋 <b>Batería de 9V colocada.</b> Falta conectar los conductores.";
+        if ($("btn-comp-bateria")) $("btn-comp-bateria").classList.add("hidden");
+        if ($("btn-comp-cable")) $("btn-comp-cable").classList.remove("hidden");
+        if ($("builder-step-tag")) $("builder-step-tag").innerText = "Paso 2 de 3";
+        if ($("builder-instruction")) $("builder-instruction").innerText = "2. Conecta los cables conductores alrededor del circuito:";
+    } else if (tipo === 'cable') {
+        circuitoEstado.cable = true;
+        if (preview) preview.innerHTML = "🔋 Batería + ⚡ <b>Cables conectados.</b> Falta instalar el receptor de luz.";
+        if ($("btn-comp-cable")) $("btn-comp-cable").classList.add("hidden");
+        if ($("btn-comp-foco")) $("btn-comp-foco").classList.remove("hidden");
+        if ($("builder-step-tag")) $("builder-step-tag").innerText = "Paso 3 de 3";
+        if ($("builder-instruction")) $("builder-instruction").innerText = "3. Instala la bombilla / foco para cerrar el circuito:";
+    } else if (tipo === 'foco') {
+        circuitoEstado.foco = true;
+        if (preview) preview.innerHTML = "✅ <b>¡Circuito Completo!</b> 🔋 Batería + ⚡ Cables + 💡 Foco instalado.";
+        if ($("btn-comp-foco")) $("btn-comp-foco").classList.add("hidden");
+        if ($("builder-step-tag")) $("builder-step-tag").innerText = "Completado";
+        if ($("builder-instruction")) $("builder-instruction").innerText = "¡Excelente trabajo! Todo está listo para la fase de observación.";
+        if ($("btn-finish-circuit")) $("btn-finish-circuit").classList.remove("hidden");
+    }
+}
+
+function completarConstruccionCircuito() {
+    if ($("modal-builder-circuito")) $("modal-builder-circuito").classList.add("hidden");
+    cambiarPaso(1);
+}
+
+/* FUNCIONES Y CALCULADORAS DE LABORATORIO DE APP2.JS */
 function calculateSpeed() {
     const distance = Number($("distance").value);
     const time = Number($("time").value);
 
     if (!Number.isFinite(distance) || !Number.isFinite(time) || distance < 0 || time <= 0) {
-        $("speedResult").textContent = "Introduce una distancia válida (≥ 0) y un tiempo mayor que cero.";
+        $("speedResult").textContent = "Introduce una distancia válida y un tiempo mayor que cero.";
         return;
     }
 
     const speed = distance / time;
-    const kmh = speed * 3.6;
-
     $("speedResult").innerHTML = `
-        <strong>Resultado: ${speed.toFixed(2)} m/s (${kmh.toFixed(2)} km/h)</strong><br>
-        Fórmula: v = d ÷ t (velocidad = distancia ÷ tiempo)<br>
-        Cálculo: ${distance} m ÷ ${time} s = ${speed.toFixed(2)} m/s.
+        <strong>Resultado: ${speed.toFixed(2)} m/s</strong><br>
+        Fórmula: velocidad = distancia ÷ tiempo.<br>
+        Operación: ${distance} ÷ ${time} = ${speed.toFixed(2)} m/s.
     `;
 
     experiments++;
-    addActivity(`Simulación de velocidad: ${distance}m / ${time}s = ${speed.toFixed(2)} m/s`);
+    addActivity("Simulación de velocidad en Física");
 }
 
 function calculateOhm() {
@@ -920,29 +1870,17 @@ function calculateOhm() {
     }
 
     const current = voltage / resistance;
-    const power = voltage * current;
-
     $("ohmResult").innerHTML = `
-        <strong>Corriente: ${current.toFixed(2)} Amperios (A)</strong><br>
-        Potencia disipada: ${power.toFixed(2)} Vatios (W)<br>
-        Fórmula: I = V ÷ R (Ley de Ohm)<br>
-        Cálculo: ${voltage} V ÷ ${resistance} Ω = ${current.toFixed(2)} A.
+        <strong>Corriente: ${current.toFixed(2)} amperios</strong><br>
+        Fórmula: I = V ÷ R.<br>
+        Operación: ${voltage} ÷ ${resistance} = ${current.toFixed(2)} A.
     `;
 
     experiments++;
-    addActivity(`Simulación Ley de Ohm: ${voltage}V / ${resistance}Ω = ${current.toFixed(2)} A`);
+    addActivity("Simulación de la ley de Ohm");
 }
 
-// ==========================================================================
-// SIMULADORES RÁPIDOS: QUÍMICA (MEZCLAS & ÁTOMO & PH)
-// ==========================================================================
-const substanceNames = {
-    agua: "Agua",
-    aceite: "Aceite",
-    sal: "Sal",
-    azucar: "Azúcar",
-    arena: "Arena"
-};
+const substanceNames = { agua: "agua", aceite: "aceite", sal: "sal", azucar: "azúcar", arena: "arena" };
 
 function mixSubstances() {
     const first = $("substanceOne").value;
@@ -952,1010 +1890,244 @@ function mixSubstances() {
     if (first === second) {
         result = `Has seleccionado dos muestras de ${substanceNames[first]}. Al ser la misma sustancia, no estás combinando materiales diferentes.`;
     } else if ((first === "agua" && second === "sal") || (first === "sal" && second === "agua")) {
-        result = "¡Disolución homogénea! La sal (NaCl) se disocia en iones Na+ y Cl- en el agua, formando una mezcla homogénea cristalina de una sola fase visible.";
+        result = "En condiciones habituales, la sal puede disolverse en agua y formar una mezcla homogénea.";
     } else if ((first === "agua" && second === "azucar") || (first === "azucar" && second === "agua")) {
-        result = "¡Disolución homogénea! La sacarosa forma puentes de hidrógeno con las moléculas polares de agua, disolviéndose completamente.";
+        result = "El azúcar puede disolverse en agua. Se obtiene una mezcla homogénea.";
     } else if ((first === "agua" && second === "aceite") || (first === "aceite" && second === "agua")) {
-        result = "¡Mezcla heterogénea inmiscible! El agua es polar y el aceite es apolar. No se unen y se observan dos fases nítidas con el aceite flotando por menor densidad.";
+        result = "El agua y el aceite no se mezclan de manera uniforme. Se observan dos fases.";
     } else if ((first === "agua" && second === "arena") || (first === "arena" && second === "agua")) {
-        result = "¡Mezcla heterogénea (Suspensión y sedimentación)! Los granos de sílice de la arena no se disuelven y se precipitan en el fondo del recipiente.";
+        result = "La arena no se disuelve en agua. Sus partículas pueden quedar suspendidas y después sedimentarse.";
     } else if ((first === "aceite" && second === "sal") || (first === "sal" && second === "aceite")) {
-        result = "La sal no se disuelve en aceite debido a que los triglicéridos no polares no interactúan con los enlaces iónicos de la sal.";
+        result = "La sal no se disuelve de manera apreciable en aceite. Se mantiene como material separado.";
     } else if ((first === "aceite" && second === "azucar") || (first === "azucar" && second === "aceite")) {
-        result = "El azúcar no se disuelve de forma apreciable en aceite. Se mantiene como una mezcla heterogénea sólida en líquido.";
+        result = "El azúcar no se disuelve de manera apreciable en aceite. La mezcla no es uniforme.";
     } else {
-        result = "Combinación entre materiales sólidos: conservan su identidad física individual como mezcla heterogénea.";
+        result = "Esta combinación no se representa con suficiente detalle en este modelo. Investiga las propiedades de cada material.";
     }
 
     $("mixResult").textContent = result;
     experiments++;
-    addActivity(`Simulación de mezclas: ${substanceNames[first]} + ${substanceNames[second]}`);
+    addActivity("Simulación conceptual de mezclas en Química");
 }
 
-let livePh = 7.0;
-function adjustQuickPh(delta, name) {
-    livePh = Math.min(14.0, Math.max(0.0, +(livePh + delta).toFixed(2)));
-    const phTag = $("livePhVal");
-    const phTagDesc = $("livePhDesc");
-    if (phTag) {
-        phTag.textContent = livePh.toFixed(2);
-        phTag.style.color = livePh < 6 ? "var(--pink)" : livePh > 8 ? "var(--purple)" : "var(--green)";
-    }
-    if (phTagDesc) {
-        phTagDesc.textContent = livePh < 6.5 ? "🔴 Ácido" : livePh > 7.5 ? "🟣 Alcalino (Base)" : "🟢 Neutro";
-    }
-    experiments++;
-    addActivity(`Prueba rápida de pH: ajustado a ${livePh} con ${name}`);
-}
+window.addEventListener("DOMContentLoaded", () => {
+    const slider = $("lightSlider");
+    if (slider) {
+        slider.addEventListener("input", function() {
+            const light = Number(this.value);
+            if ($("lightValue")) $("lightValue").textContent = light + "%";
 
-const atomosData = {
-    Carbono: { z: 6, p: 6, n: 6, e: 6, config: "1s² 2s² 2p²" },
-    Hidrogeno: { z: 1, p: 1, n: 0, e: 1, config: "1s¹" },
-    Helio: { z: 2, p: 2, n: 2, e: 2, config: "1s²" },
-    Litio: { z: 3, p: 3, n: 4, e: 3, config: "1s² 2s¹" },
-    Oxigeno: { z: 8, p: 8, n: 8, e: 8, config: "1s² 2s² 2p⁴" }
-};
+            if (light < 20) {
+                if ($("plantEmoji")) $("plantEmoji").textContent = "🌱";
+                if ($("photoResult")) $("photoResult").textContent = "Con poca luz, la fotosíntesis puede verse limitada. La planta necesita luz para realizar este proceso.";
+            } else if (light < 70) {
+                if ($("plantEmoji")) $("plantEmoji").textContent = "🌿";
+                if ($("photoResult")) $("photoResult").textContent = "La planta cuenta con una intensidad de luz intermedia. La luz es uno de los factores que intervienen en la fotosíntesis.";
+            } else {
+                if ($("plantEmoji")) $("plantEmoji").textContent = "🌳";
+                if ($("photoResult")) $("photoResult").textContent = "El modelo representa una disponibilidad alta de luz. Recuerda que la fotosíntesis también depende del agua, el dióxido de carbono y otros factores.";
+            }
+        });
 
-function selectAtom(elem) {
-    const data = atomosData[elem] || atomosData.Carbono;
-    $("atomName").textContent = `${elem} (Z = ${data.z})`;
-    $("atomP").textContent = data.p;
-    $("atomN").textContent = data.n;
-    $("atomE").textContent = data.e;
-    $("atomConfig").textContent = data.config;
-    document.querySelectorAll(".atom-btn").forEach(b => b.classList.remove("selected"));
-    const active = $(`btn-atom-${elem}`);
-    if (active) active.classList.add("selected");
-}
-
-// ==========================================
-// SIMULADORES RÁPIDOS: BIOLOGÍA (FOTOSÍNTESIS & CÉLULA)
-// ==========================================
-if ($("lightSlider")) {
-    $("lightSlider").addEventListener("input", function() {
-        const light = Number(this.value);
-        $("lightValue").textContent = light + "%";
-
-        if (light < 20) {
-            $("plantEmoji").textContent = "🌱";
-            $("plantEmoji").style.transform = "scale(0.9)";
-            $("photoResult").textContent =
-                "Con poca luz, la fotosíntesis se ve severamente limitada. Los cloroplastos requieren fotones para hidrolizar agua en las membranas tilacoides.";
-        } else if (light < 70) {
-            $("plantEmoji").textContent = "🌿";
-            $("plantEmoji").style.transform = "scale(1.15)";
-            $("photoResult").textContent =
-                "Intensidad de luz intermedia y equilibrada. La planta realiza el ciclo de Calvin fijando CO2 y desprendiendo oxígeno molecular.";
-        } else {
-            $("plantEmoji").textContent = "🌳";
-            $("plantEmoji").style.transform = "scale(1.35)";
-            $("photoResult").textContent =
-                "¡Máxima iluminación solar! Alta tasa fotosintética con desprendimiento constante de O2 y síntesis óptima de glucosa.";
-        }
-    });
-
-    $("lightSlider").addEventListener("change", function() {
-        experiments++;
-        addActivity(`Exploración de fotosíntesis al ${this.value}% de luz`);
-    });
-}
-
-function selectCellType(type) {
-    const vegNote = $("vegetalNote");
-    if (type === "vegetal") {
-        vegNote.classList.remove("hidden");
-    } else {
-        vegNote.classList.add("hidden");
-    }
-}
-
-// ==========================================================================
-// EVALUACIONES CIENTÍFICAS MEJORADAS (¡OTORGA 100/100 CON TODAS BIEN!)
-// ==========================================================================
-function loadQuestion() {
-    const q = questions[currentQuestion];
-    $("quizCounter").textContent = `Pregunta ${currentQuestion + 1} de ${questions.length}`;
-    $("quizQuestion").textContent = q.question;
-    $("quizFeedback").classList.add("hidden");
-    $("nextQuestion").classList.add("hidden");
-    $("quizOptions").innerHTML = "";
-
-    questionAnswered = false;
-
-    q.options.forEach((opt, idx) => {
-        const btn = document.createElement("button");
-        btn.className = "quiz-option";
-        btn.innerHTML = `<strong>${String.fromCharCode(65 + idx)}.</strong> ${opt}`;
-        btn.addEventListener("click", () => selectQuizAnswer(idx));
-        $("quizOptions").appendChild(btn);
-    });
-}
-
-function selectQuizAnswer(idx) {
-    if (questionAnswered) return;
-    questionAnswered = true;
-
-    const q = questions[currentQuestion];
-    const buttons = document.querySelectorAll("#quizOptions .quiz-option");
-    buttons.forEach(b => b.disabled = true);
-
-    const isCorrect = idx === q.answer;
-    if (isCorrect) {
-        sessionScore++;
-        correctAnswers++;
-        $("quizFeedback").innerHTML = `
-            <strong style="color:var(--green)">¡Correcto! ⭐ Explicación:</strong><br>${q.explanation}
-        `;
-        $("quizFeedback").style.borderColor = "var(--green)";
-        buttons[idx].style.borderColor = "var(--green)";
-        buttons[idx].style.background = "rgba(84, 230, 165, 0.15)";
-    } else {
-        $("quizFeedback").innerHTML = `
-            <strong style="color:var(--pink)">Respuesta incorrecta. 💡 Aprende:</strong><br>${q.explanation}
-        `;
-        $("quizFeedback").style.borderColor = "var(--pink)";
-        buttons[idx].style.borderColor = "var(--pink)";
-        buttons[q.answer].style.borderColor = "var(--green)";
-    }
-
-    $("quizFeedback").classList.remove("hidden");
-    $("nextQuestion").classList.remove("hidden");
-
-    addActivity(isCorrect ? "Respuesta correcta en evaluación" : "Pregunta respondida en evaluación");
-}
-
-$("nextQuestion").addEventListener("click", function() {
-    currentQuestion++;
-    if (currentQuestion >= questions.length) {
-        finishQuiz();
-    } else {
-        loadQuestion();
+        slider.addEventListener("change", function() {
+            experiments++;
+            addActivity("Exploración del modelo de fotosíntesis");
+        });
     }
 });
 
+/* EVALUACIÓN CUESTIONARIOS DE APP2.JS */
+const questions = [
+    {
+        question: "¿Qué fórmula permite calcular la velocidad media?",
+        options: ["Distancia ÷ tiempo", "Tiempo ÷ distancia", "Distancia × masa"],
+        answer: 0,
+        explanation: "La velocidad media se calcula dividiendo la distancia recorrida entre el tiempo empleado."
+    },
+    {
+        question: "¿Qué establece la ley de Ohm?",
+        options: ["La relación entre masa y volumen", "La relación entre voltaje, corriente y resistencia", "La relación entre luz y temperatura"],
+        answer: 1,
+        explanation: "La ley de Ohm se expresa como V = I × R."
+    },
+    {
+        question: "¿Qué ocurre cuando la sal se disuelve en agua?",
+        options: ["Se forma una mezcla homogénea", "Se convierte en un metal", "Desaparece la materia"],
+        answer: 0,
+        explanation: "La sal se dispersa en el agua formando una disolución homogénea."
+    },
+    {
+        question: "¿Qué estructura contiene el material genético de una célula eucariota?",
+        options: ["Membrana", "Núcleo", "Pared celular"],
+        answer: 1,
+        explanation: "El núcleo de las células eucariotas contiene la mayor parte del material genético."
+    },
+    {
+        question: "¿Qué necesita una planta para realizar la fotosíntesis?",
+        options: ["Luz, agua y dióxido de carbono", "Arena, aceite y sal", "Únicamente oxígeno"],
+        answer: 0,
+        explanation: "La fotosíntesis utiliza energía luminosa, agua y dióxido de carbono para producir azúcares y liberar oxígeno."
+    },
+    {
+        question: "¿Qué partícula tiene carga eléctrica negativa?",
+        options: ["Protón", "Neutrón", "Electrón"],
+        answer: 2,
+        explanation: "El electrón tiene carga negativa; el protón tiene carga positiva y el neutrón no tiene carga."
+    }
+];
+
+let currentQuestion = 0;
+let questionAnswered = false;
+let sessionScore = 0;
+
+function loadQuestion() {
+    const question = questions[currentQuestion];
+    if (!question) return;
+
+    if ($("quizCounter")) $("quizCounter").textContent = `Pregunta ${currentQuestion + 1} de ${questions.length}`;
+    if ($("quizQuestion")) $("quizQuestion").textContent = question.question;
+    if ($("quizFeedback")) $("quizFeedback").classList.add("hidden");
+    if ($("nextQuestion")) $("nextQuestion").classList.add("hidden");
+
+    const optionsContainer = $("quizOptions");
+    if (!optionsContainer) return;
+    optionsContainer.innerHTML = "";
+    questionAnswered = false;
+
+    question.options.forEach((option, index) => {
+        const button = document.createElement("button");
+        button.className = "quiz-option";
+        button.textContent = option;
+        button.addEventListener("click", () => selectAnswer(index));
+        optionsContainer.appendChild(button);
+    });
+}
+
+function selectAnswer(index) {
+    if (questionAnswered) return;
+    questionAnswered = true;
+
+    const question = questions[currentQuestion];
+    const buttons = document.querySelectorAll(".quiz-option");
+    buttons.forEach(button => button.disabled = true);
+
+    const isCorrect = index === question.answer;
+
+    if (isCorrect) {
+        sessionScore++;
+        correctAnswers++;
+        if ($("quizFeedback")) $("quizFeedback").textContent = "¡Correcto! ⭐ " + question.explanation;
+    } else {
+        if ($("quizFeedback")) $("quizFeedback").textContent = "Todavía puedes aprender. " + question.explanation;
+    }
+
+    if ($("quizFeedback")) $("quizFeedback").classList.remove("hidden");
+    if ($("nextQuestion")) $("nextQuestion").classList.remove("hidden");
+
+    if (buttons[question.answer]) buttons[question.answer].style.borderColor = "#54e6a5";
+    if (!isCorrect && buttons[index]) buttons[index].style.borderColor = "#ff70b7";
+
+    addActivity(isCorrect ? "Respuesta correcta en evaluación" : "Pregunta revisada en evaluación");
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+    const btnNext = $("nextQuestion");
+    if (btnNext) {
+        btnNext.addEventListener("click", function() {
+            currentQuestion++;
+            if (currentQuestion >= questions.length) {
+                finishQuiz();
+            } else {
+                loadQuestion();
+            }
+        });
+    }
+
+    const btnRestart = $("restartQuiz");
+    if (btnRestart) {
+        btnRestart.addEventListener("click", restartQuiz);
+    }
+    loadQuestion();
+});
+
 function finishQuiz() {
-    // CALIFICACIÓN MATEMÁTICA EXACTA: Si tienes 6 de 6 = 100 / 100 PTS!
-    const finalScore = Math.round((sessionScore / questions.length) * 100);
-
-    $("quizQuestion").textContent = "¡Evaluación finalizada! 🎉";
-    $("quizOptions").innerHTML = `
-        <div class="score-display-box">
-            <span style="font-size:12px; text-transform:uppercase; font-weight:800; color:var(--muted); letter-spacing:1px;">
-                Calificación Final Obtenida
-            </span>
-            <div class="score-number">${finalScore} / 100 PTS</div>
-            <div class="rank-badge">
-                ${finalScore === 100 ? "🏆 Maestro del Cosmos (¡Puntaje Perfecto 100%)" : finalScore >= 80 ? "⚡ Investigador Cuántico" : "🌱 Explorador Novato"}
-            </div>
-            <p style="margin-top:14px; font-size:14px; color:var(--text);">
-                Has respondido <b>${sessionScore}</b> de <b>${questions.length}</b> preguntas correctamente.
-            </p>
-        </div>
-    `;
-
-    $("quizFeedback").classList.add("hidden");
-    $("nextQuestion").classList.add("hidden");
-    $("quizCounter").textContent = "Completado";
-    $("restartQuiz").textContent = "Volver a intentar";
-
-    missionsCompleted++;
-    saveProgress();
-    addActivity(`Completó evaluación científica con calificación de ${finalScore} / 100 PTS`);
+    if ($("quizQuestion")) $("quizQuestion").textContent = "¡Evaluación terminada! 🎉";
+    if ($("quizOptions")) $("quizOptions").innerHTML = "";
+    if ($("quizFeedback")) {
+        $("quizFeedback").classList.remove("hidden");
+        $("quizFeedback").textContent = `Obtuviste ${sessionScore} respuestas correctas de ${questions.length}.`;
+    }
+    if ($("nextQuestion")) $("nextQuestion").classList.add("hidden");
+    if ($("quizCounter")) $("quizCounter").textContent = "Finalizado";
+    if ($("restartQuiz")) $("restartQuiz").textContent = "Volver a intentar";
 }
 
 function restartQuiz() {
     currentQuestion = 0;
     sessionScore = 0;
-    $("restartQuiz").textContent = "Reiniciar evaluación";
+    if ($("restartQuiz")) $("restartQuiz").textContent = "Reiniciar evaluación";
     loadQuestion();
 }
-$("restartQuiz").addEventListener("click", restartQuiz);
-loadQuestion();
 
-// ==========================================================================
-// MISIONES PRO: MÉTODO CIENTÍFICO EN 7 PASOS
-// ==========================================================================
-function seleccionarNivelMisiones(lvl) {
-    nivelActual = lvl;
-    document.querySelectorAll(".level-btn").forEach(b => b.classList.remove("active"));
-    const active = $(`btn-lvl-${lvl}`);
-    if (active) active.classList.add("active");
-    renderListaMisiones();
-}
-
-function seleccionarMateriaMisiones(mat) {
-    materiaActual = mat;
-    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-    const active = $(`btn-mat-${mat}`);
-    if (active) active.classList.add("active");
-    renderListaMisiones();
-}
-
-function renderListaMisiones() {
-    const container = $("listaMisionesHub");
-    if (!container) return;
-
-    const list = dbExperimentos[nivelActual][materiaActual] || [];
-    container.innerHTML = list.map(exp => `
-        <div class="mission-card" onclick="iniciarMision('${exp.id}')">
-            <div>
-                <span class="pill-status" style="font-size:10px; margin-bottom:10px; display:inline-block;">
-                    ${nivelActual.toUpperCase()}
-                </span>
-                <h4>${exp.titulo}</h4>
-                <p>${exp.desc}</p>
-            </div>
-            <div style="margin-top:15px; font-size:12px; font-weight:800; color:var(--cyan); display:flex; justify-content:space-between;">
-                <span>Iniciar Método en 7 Pasos</span>
-                <span>→</span>
-            </div>
-        </div>
-    `).join("");
-}
-
-function iniciarMision(expId) {
-    const list = [
-        ...dbExperimentos[nivelActual].Fisica,
-        ...dbExperimentos[nivelActual].Quimica,
-        ...dbExperimentos[nivelActual].Biologia
-    ];
-    expActual = list.find(e => e.id === expId);
-    if (!expActual) return;
-
-    userSession = {
-        observacionSeleccionada: "",
-        observacionLibre: "",
-        problemaSeleccionado: "",
-        hipotesisCondicion: expActual.hipCondiciones[0],
-        hipotesisEfecto: expActual.hipEfectos[0],
-        ensayos: [],
-        analisisSeleccionado: "",
-        conclusionSeleccionada: "",
-        conclusionTexto: "",
-        comunicacionTitular: ""
-    };
-
-    // Auto-registro inicial de calibración para garantizar que el estudiante nunca pierda puntos de laboratorio
-    userSession.ensayos.push({
-        num: 1,
-        control: "Condición Inicial Calibrada",
-        resultado: "Línea base registrada",
-        estado: "Normal"
-    });
-
-    $("misionesHub").classList.add("hidden");
-    $("misionLabCard").classList.remove("hidden");
-    $("dictamenCard").classList.add("hidden");
-
-    $("labTitulo").textContent = expActual.titulo;
-    $("labTag").textContent = `${materiaActual.toUpperCase()} · ${nivelActual.toUpperCase()}`;
-
-    // Poblar opciones paso a paso
-    poblarPaso1();
-    poblarPaso2();
-    poblarPaso3();
-    configurarSimuladorPaso4();
-    poblarPaso5();
-    poblarPaso6();
-    poblarPaso7();
-
-    if (expActual.simTipo === "circuito") {
-        abrirConstructorCircuito();
-    } else {
-        cambiarPaso(1);
-    }
-
-    addActivity(`Inició misión Pro: ${expActual.titulo}`);
-}
-
-function volverAListaMisiones() {
-    detenerCanvas();
-    expActual = null;
-    $("misionLabCard").classList.add("hidden");
-    $("dictamenCard").classList.add("hidden");
-    $("misionesHub").classList.remove("hidden");
-    renderListaMisiones();
-}
-
-function cambiarPaso(paso) {
-    pasoActual = paso;
-    document.querySelectorAll(".step-panel").forEach(p => p.classList.add("hidden"));
-    const activePanel = $(`step-panel-${paso}`);
-    if (activePanel) activePanel.classList.remove("hidden");
-
-    const titulos = [
-        "1. Observación", "2. Pregunta Problema", "3. Formulación de Hipótesis",
-        "4. Experimentación Virtual", "5. Análisis de Mediciones", "6. Conclusión", "7. Divulgación"
-    ];
-
-    $("stepName").textContent = `Paso ${paso} de 7: ${titulos[paso - 1]}`;
-    $("progressFill").style.width = `${(paso / 7) * 100}%`;
-
-    detenerCanvas();
-
-    if (paso === 1) {
-        arrancarCanvas("canvasObs", expActual.simTipo, true);
-    } else if (paso === 4) {
-        arrancarCanvas("canvasExp", expActual.simTipo, false);
-    } else if (paso === 6) {
-        $("txtHipRecordatorio").textContent = `"Si ${userSession.hipotesisCondicion.toLowerCase()}, entonces ${userSession.hipotesisEfecto.toLowerCase()}."`;
-    }
-}
-
-function avanzarPaso(pasoAct, pasoSig) {
-    if (pasoAct === 1 && !userSession.observacionSeleccionada) {
-        alert("Selecciona al menos una observación visual para continuar.");
-        return;
-    }
-    if (pasoAct === 2 && !userSession.problemaSeleccionado) {
-        const libre = $("inputProblemaLibre").value.trim();
-        if (libre) {
-            userSession.problemaSeleccionado = libre;
-        } else {
-            alert("Elige una pregunta de investigación o escribe la tuya.");
-            return;
-        }
-    }
-    if (pasoAct === 5 && !userSession.analisisSeleccionado) {
-        alert("Selecciona la tendencia descubierta en tus mediciones.");
-        return;
-    }
-    if (pasoAct === 6 && !userSession.conclusionSeleccionada) {
-        alert("Elige la conclusión para validar o refutar tu hipótesis.");
-        return;
-    }
-    cambiarPaso(pasoSig);
-}
-
-// Poblar pasos
-function poblarPaso1() {
-    const c = $("quizObsOptions");
-    c.innerHTML = expActual.preguntasObs.map(obs => `
-        <div class="quiz-option" onclick="seleccionarObs(this, '${escapeHTML(obs)}')">${obs}</div>
-    `).join("");
-}
-function seleccionarObs(el, texto) {
-    document.querySelectorAll("#quizObsOptions .quiz-option").forEach(o => o.classList.remove("selected"));
-    el.classList.add("selected");
-    userSession.observacionSeleccionada = texto;
-}
-
-function poblarPaso2() {
-    const c = $("quizProbOptions");
-    c.innerHTML = expActual.preguntasProb.map(prob => `
-        <div class="quiz-option" onclick="seleccionarProb(this, '${escapeHTML(prob)}')">${prob}</div>
-    `).join("");
-}
-function seleccionarProb(el, texto) {
-    document.querySelectorAll("#quizProbOptions .quiz-option").forEach(o => o.classList.remove("selected"));
-    el.classList.add("selected");
-    userSession.problemaSeleccionado = texto;
-}
-
-function poblarPaso3() {
-    const selCond = $("hbCondicion");
-    const selEf = $("hbEfecto");
-    selCond.innerHTML = expActual.hipCondiciones.map(c => `<option value="${c}">${c}</option>`).join("");
-    selEf.innerHTML = expActual.hipEfectos.map(e => `<option value="${e}">${e}</option>`).join("");
-    actualizarPreviewHipotesis();
-}
-
-function actualizarPreviewHipotesis() {
-    const c = $("hbCondicion").value;
-    const e = $("hbEfecto").value;
-    userSession.hipotesisCondicion = c;
-    userSession.hipotesisEfecto = e;
-    $("hbPreviewText").textContent = `"Si ${c.toLowerCase()}, entonces ${e.toLowerCase()}."`;
-}
-
-function configurarSimuladorPaso4() {
-    const c = $("simControlsContainer");
-    simVars = { param1: 35, fuerza: 14, masa: 2.0, impulsoActivo: false, velocidadAcc: 0 };
-
-    if (expActual.simTipo === "fuerza" || expActual.simTipo === "choque") {
-        c.innerHTML = `
-            <div style="margin-bottom:12px;">
-                <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:800; margin-bottom:4px;">
-                    <span>Fuerza Aplicada: <b id="valCtrlFuerza" style="color:var(--cyan)">14 N</b></span>
-                </div>
-                <input type="range" min="5" max="80" value="14" oninput="actualizarFuerzaSim(this.value)">
-            </div>
-            <div style="margin-bottom:16px;">
-                <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:800; margin-bottom:4px;">
-                    <span>Masa del Carro: <b id="valCtrlMasa" style="color:var(--purple)">2.0 kg</b></span>
-                </div>
-                <input type="range" min="0.5" max="5.0" step="0.5" value="2.0" oninput="actualizarMasaSim(this.value)">
-            </div>
-            <button class="primary-btn" style="width:100%;" onclick="lanzarPruebaNewton()">▶ Aplicar Impulso y Registrar Medición</button>
-        `;
-    } else if (expActual.simTipo === "circuito") {
-        c.innerHTML = `
-            <div style="margin-bottom:14px;">
-                <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:800; margin-bottom:4px;">
-                    <span>Voltaje Batería: <b id="valCtrlVoltaje" style="color:var(--amber)">9 V</b></span>
-                </div>
-                <input type="range" min="1" max="24" value="9" oninput="actualizarVoltajeSim(this.value)">
-            </div>
-            <button class="primary-btn" style="width:100%;" onclick="registrarEnsayoCircuito()">💡 Registrar Corriente e Intensidad Lumínica</button>
-        `;
-    } else if (expActual.simTipo === "ph") {
-        c.innerHTML = `
-            <div style="display:flex; gap:10px; margin-bottom:12px;">
-                <button class="secondary-btn" style="flex:1;" onclick="agregarGotasPH('acido')">+ Ácido Clorhídrico (HCl)</button>
-                <button class="secondary-btn" style="flex:1;" onclick="agregarGotasPH('base')">+ Hidróxido de Sodio (NaOH)</button>
-            </div>
-            <div style="text-align:center; font-size:14px; font-weight:800;">
-                pH de la solución: <b id="valPhSim" style="color:var(--cyan); font-size:18px;">7.00</b>
-            </div>
-        `;
-    } else {
-        c.innerHTML = `
-            <div style="margin-bottom:14px;">
-                <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:800; margin-bottom:4px;">
-                    <span>Intensidad de Entrada: <b id="valCtrlGeneric" style="color:var(--cyan)">50%</b></span>
-                </div>
-                <input type="range" min="10" max="100" value="50" oninput="actualizarGenericSim(this.value)">
-            </div>
-            <button class="primary-btn" style="width:100%;" onclick="registrarEnsayoGenerico()">🚀 Registrar Lectura Experimental</button>
-        `;
-    }
-}
-
-function actualizarFuerzaSim(v) {
-    simVars.fuerza = parseFloat(v);
-    $("valCtrlFuerza").textContent = v + " N";
-}
-function actualizarMasaSim(v) {
-    simVars.masa = parseFloat(v);
-    $("valCtrlMasa").textContent = parseFloat(v).toFixed(1) + " kg";
-}
-function lanzarPruebaNewton() {
-    const acel = (simVars.fuerza / simVars.masa).toFixed(2);
-    simVars.impulsoActivo = true;
-    simVars.velocidadAcc = parseFloat(acel);
-    registrarFilaTabla(`F = ${simVars.fuerza} N, m = ${simVars.masa} kg`, `Aceleración = ${acel} m/s²`, "Completado");
-}
-
-function actualizarVoltajeSim(v) {
-    simVars.param1 = parseFloat(v);
-    $("valCtrlVoltaje").textContent = v + " V";
-}
-function registrarEnsayoCircuito() {
-    const v = simVars.param1 || 9;
-    const a = (v / 10).toFixed(2);
-    registrarFilaTabla(`Voltaje = ${v} V`, `Corriente = ${a} A`, Number(a) > 1.5 ? "Alta Intensidad" : "Normal");
-}
-
-function agregarGotasPH(tipo) {
-    simVars.param1 = simVars.param1 || 7.0;
-    if (tipo === "acido") simVars.param1 = Math.max(1.0, +(simVars.param1 - 1.2).toFixed(2));
-    else simVars.param1 = Math.min(14.0, +(simVars.param1 + 1.2).toFixed(2));
-    $("valPhSim").textContent = simVars.param1.toFixed(2);
-    registrarFilaTabla(`Reactivo ${tipo.toUpperCase()}`, `pH = ${simVars.param1.toFixed(2)}`, simVars.param1 < 7 ? "Ácido" : simVars.param1 > 7 ? "Base" : "Neutro");
-}
-
-function actualizarGenericSim(v) {
-    simVars.param1 = parseFloat(v);
-    $("valCtrlGeneric").textContent = v + "%";
-}
-function registrarEnsayoGenerico() {
-    const v = simVars.param1 || 50;
-    registrarFilaTabla(`Parámetro Entrada (${v}%)`, `Lectura = ${(v * 1.34).toFixed(1)} u`, "Completado");
-}
-
-function registrarFilaTabla(control, resultado, estado) {
-    const num = userSession.ensayos.length + 1;
-    userSession.ensayos.push({ num, control, resultado, estado });
-    actualizarTablaHTML();
-    experiments++;
-    saveProgress();
-}
-
-function actualizarTablaHTML() {
-    const tbody = $("tablaRegistrosBody");
-    if (!tbody) return;
-    tbody.innerHTML = userSession.ensayos.map(e => `
-        <tr>
-            <td><b>#${e.num}</b></td>
-            <td>${e.control}</td>
-            <td style="color:var(--cyan); font-weight:800; font-family:'JetBrains Mono', monospace;">${e.resultado}</td>
-            <td><span class="pill-status" style="font-size:10px;">${e.estado}</span></td>
-        </tr>
-    `).join("");
-}
-
-function poblarPaso5() {
-    actualizarTablaHTML();
-    const c = $("quizAnalisisOptions");
-    c.innerHTML = expActual.analisisOpciones.map(opt => `
-        <div class="quiz-option" onclick="seleccionarAnalisis(this, '${escapeHTML(opt)}')">${opt}</div>
-    `).join("");
-}
-function seleccionarAnalisis(el, texto) {
-    document.querySelectorAll("#quizAnalisisOptions .quiz-option").forEach(o => o.classList.remove("selected"));
-    el.classList.add("selected");
-    userSession.analisisSeleccionado = texto;
-}
-
-function poblarPaso6() {
-    const c = $("quizConclusionOptions");
-    c.innerHTML = expActual.conclusionesOpciones.map(opt => `
-        <div class="quiz-option" onclick="seleccionarConclusion(this, '${escapeHTML(opt)}')">${opt}</div>
-    `).join("");
-}
-function seleccionarConclusion(el, texto) {
-    document.querySelectorAll("#quizConclusionOptions .quiz-option").forEach(o => o.classList.remove("selected"));
-    el.classList.add("selected");
-    userSession.conclusionSeleccionada = texto;
-}
-
-function poblarPaso7() {
-    const c = $("quizComOptions");
-    c.innerHTML = expActual.titularesCom.map(tit => `
-        <div class="quiz-option" onclick="seleccionarCom(this, '${escapeHTML(tit)}')">${tit}</div>
-    `).join("");
-}
-function seleccionarCom(el, texto) {
-    document.querySelectorAll("#quizComOptions .quiz-option").forEach(o => o.classList.remove("selected"));
-    el.classList.add("selected");
-    userSession.comunicacionTitular = texto;
-}
-
-// ==========================================================================
-// EVALUACIÓN POR IA HÍBRIDA MEJORADA (CALIFICACIÓN COMPLETA 100/100)
-// ==========================================================================
-function ejecutarEvaluacionMisionFinal() {
-    detenerCanvas();
-    $("misionLabCard").classList.add("hidden");
-    $("dictamenCard").classList.remove("hidden");
-
-    userSession.observacionLibre = $("inputObsExtra").value.trim();
-    userSession.conclusionTexto = $("inputConclusionTexto").value.trim();
-
-    // RÚBRICA Y PUNTUACIÓN MEJORADA: Si el estudiante completó los pasos -> 100 / 100 PTS!
-    let score = 0;
-    const rubrica = [];
-
-    // 1. Observación (15 pts)
-    if (userSession.observacionSeleccionada) {
-        score += 15;
-        rubrica.push({ paso: "1. Observación", aprobado: true, mensaje: "Identificaste con precisión el fenómeno y variables observables." });
-    } else {
-        rubrica.push({ paso: "1. Observación", aprobado: false, mensaje: "No seleccionaste ninguna observación concreta." });
-    }
-
-    // 2. Planteamiento del Problema (15 pts)
-    if (userSession.problemaSeleccionado) {
-        score += 15;
-        rubrica.push({ paso: "2. Planteamiento", aprobado: true, mensaje: "Formulaste una pregunta de investigación con clara relación causal." });
-    } else {
-        rubrica.push({ paso: "2. Planteamiento", aprobado: false, mensaje: "Falta definir el problema de investigación." });
-    }
-
-    // 3. Formulación de Hipótesis (15 pts)
-    if (userSession.hipotesisCondicion && userSession.hipotesisEfecto) {
-        score += 15;
-        rubrica.push({ paso: "3. Hipótesis", aprobado: true, mensaje: `Construcción predictiva impecable: 'Si ${userSession.hipotesisCondicion}, entonces ${userSession.hipotesisEfecto}'.` });
-    } else {
-        rubrica.push({ paso: "3. Hipótesis", aprobado: false, mensaje: "Falta formular la predicción hipotética." });
-    }
-
-    // 4. Experimentación Cuantitativa (20 pts)
-    if (userSession.ensayos.length >= 1) {
-        score += 20;
-        rubrica.push({ paso: "4. Experimentación", aprobado: true, mensaje: `Rigor experimental: ejecutaste ${userSession.ensayos.length} ensayos controlados con mediciones verificadas.` });
-    } else {
-        rubrica.push({ paso: "4. Experimentación", aprobado: false, mensaje: "Se requiere registrar al menos una medición empírica." });
-    }
-
-    // 5. Análisis de Mediciones (15 pts)
-    if (userSession.analisisSeleccionado) {
-        score += 15;
-        rubrica.push({ paso: "5. Análisis de Datos", aprobado: true, mensaje: "Descubriste con acierto la tendencia matemática subyacente en la tabla." });
-    } else {
-        rubrica.push({ paso: "5. Análisis de Datos", aprobado: false, mensaje: "No seleccionaste la tendencia de los datos." });
-    }
-
-    // 6. Conclusión Reflexiva (10 pts)
-    if (userSession.conclusionSeleccionada) {
-        score += 10;
-        rubrica.push({ paso: "6. Conclusión", aprobado: true, mensaje: "Contrastaste con honestidad científica las mediciones contra tu hipótesis." });
-    } else {
-        rubrica.push({ paso: "6. Conclusión", aprobado: false, mensaje: "Falta seleccionar la conclusión final." });
-    }
-
-    // 7. Divulgación y Titular (10 pts)
-    if (userSession.comunicacionTitular) {
-        score += 10;
-        rubrica.push({ paso: "7. Divulgación", aprobado: true, mensaje: "Elegiste un titular atractivo, claro y riguroso para la comunidad científica." });
-    } else {
-        rubrica.push({ paso: "7. Divulgación", aprobado: false, mensaje: "Falta seleccionar el titular de comunicación." });
-    }
-
-    // Total máximo garantizado de 100 puntos si todo fue respondido
-    $("dictamenScore").textContent = `${score} / 100 PTS`;
-    $("dictamenRank").textContent = score >= 90 ? "🏆 Maestro del Cosmos (100% de Rigor)" : score >= 75 ? "⚡ Investigador Cuántico" : "🌱 Explorador Novato";
-    $("dictamenMsg").textContent = score >= 90 
-        ? "¡Trabajo científico perfecto! Demostraste un dominio sobresaliente del método experimental con hipótesis comprobables y análisis cuantitativo impecable."
-        : "¡Buen intento! Aplicaste el método científico con dedicación; prueba repasar más ensayos para maximizar tu puntaje.";
-
-    $("dictamenRubrica").innerHTML = rubrica.map(r => `
-        <div class="eval-rubrica-item ${r.aprobado ? '' : 'warn'}">
-            <b>${r.aprobado ? '✔ Logrado' : '⚠️ Atención'} - ${r.paso}:</b>
-            <p style="color:var(--muted); margin-top:3px;">${r.mensaje}</p>
-        </div>
-    `).join("");
-
-    missionsCompleted++;
-    saveProgress();
-    addActivity(`Completó la misión "${expActual.titulo}" con ${score}/100 PTS`);
-}
-
-// ==========================================================================
-// RENDERIZADOR CANVAS INTERACTIVO (NEWTON, PÉNDULO, CIRCUITO, PH)
-// ==========================================================================
-function detenerCanvas() {
-    if (animId) {
-        cancelAnimationFrame(animId);
-        animId = null;
-    }
-}
-
-function arrancarCanvas(canvasId, tipo, esDemo) {
-    detenerCanvas();
-    const canvas = $(canvasId);
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-
-    let xPos = 40;
-    let t = 0;
-    let velocidadActual = 0;
-    let isDragging = false;
-    let anguloPendulo = (45 * Math.PI) / 180;
-    let velAngular = 0;
-    let isDraggingPendulo = false;
-
-    // Responsive Canvas
-    const resizeCanvas = () => {
-        const rect = canvas.getBoundingClientRect();
-        if (rect.width > 0) {
-            canvas.width = Math.min(600, Math.floor(rect.width));
-            canvas.height = 240;
-        }
-    };
-    resizeCanvas();
-
-    // Eventos Mouse / Touch
-    const onDown = (clientX, clientY) => {
-        const rect = canvas.getBoundingClientRect();
-        const mx = (clientX - rect.left) * (canvas.width / rect.width);
-        const my = (clientY - rect.top) * (canvas.height / rect.height);
-
-        if (tipo === "fuerza" || tipo === "choque") {
-            if (mx >= xPos - 20 && mx <= xPos + 80 && my >= canvas.height - 75 && my <= canvas.height - 15) {
-                isDragging = true;
-            }
-        } else if (tipo === "pendulo") {
-            const cx = canvas.width / 2;
-            const cy = 30;
-            const xE = cx + 120 * Math.sin(anguloPendulo);
-            const yE = cy + 120 * Math.cos(anguloPendulo);
-            if (Math.hypot(mx - xE, my - yE) < 40) {
-                isDraggingPendulo = true;
-                velAngular = 0;
-            }
-        }
-    };
-
-    const onMove = (clientX, clientY) => {
-        const rect = canvas.getBoundingClientRect();
-        const mx = (clientX - rect.left) * (canvas.width / rect.width);
-        const my = (clientY - rect.top) * (canvas.height / rect.height);
-
-        if (isDragging) {
-            xPos = Math.max(40, Math.min(mx - 30, canvas.width - 70));
-            velocidadActual = 0;
-        }
-        if (isDraggingPendulo) {
-            const cx = canvas.width / 2;
-            const cy = 30;
-            anguloPendulo = Math.max(-1.3, Math.min(1.3, Math.atan2(mx - cx, my - cy)));
-            velAngular = 0;
-        }
-    };
-
-    const onUp = () => {
-        isDragging = false;
-        isDraggingPendulo = false;
-    };
-
-    canvas.onmousedown = (e) => onDown(e.clientX, e.clientY);
-    window.onmousemove = (e) => onMove(e.clientX, e.clientY);
-    window.onmouseup = onUp;
-    canvas.ontouchstart = (e) => { if (e.touches[0]) onDown(e.touches[0].clientX, e.touches[0].clientY); };
-    window.ontouchmove = (e) => { if (e.touches[0]) onMove(e.touches[0].clientX, e.touches[0].clientY); };
-    window.ontouchend = onUp;
-
-    function render() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        t += 0.04;
-
-        if (tipo === "fuerza" || tipo === "choque") {
-            // Pista
-            ctx.strokeStyle = "#1e293b";
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.moveTo(0, canvas.height - 30);
-            ctx.lineTo(canvas.width, canvas.height - 30);
-            ctx.stroke();
-
-            if (esDemo) {
-                xPos = canvas.width / 2 - 30 + Math.sin(t * 2) * 80;
-            } else {
-                if (simVars.impulsoActivo) {
-                    velocidadActual = (simVars.velocidadAcc || 2.0) * 0.45;
-                    simVars.impulsoActivo = false;
-                }
-                if (!isDragging) {
-                    if (velocidadActual > 0.05) {
-                        xPos += velocidadActual;
-                        velocidadActual *= 0.96;
-                    } else {
-                        velocidadActual = 0;
-                    }
-                }
-                if (xPos >= canvas.width - 70) {
-                    xPos = canvas.width - 70;
-                    velocidadActual = 0;
-                }
-            }
-
-            // Carro
-            ctx.fillStyle = isDragging ? "#10b981" : "#24d9f2";
-            ctx.shadowColor = isDragging ? "#10b981" : "#24d9f2";
-            ctx.shadowBlur = 10;
-            ctx.fillRect(xPos, canvas.height - 65, 60, 25);
-            ctx.shadowBlur = 0;
-
-            // Ruedas
-            ctx.fillStyle = "#ffffff";
-            ctx.beginPath();
-            ctx.arc(xPos + 14, canvas.height - 38, 7, 0, Math.PI * 2);
-            ctx.arc(xPos + 46, canvas.height - 38, 7, 0, Math.PI * 2);
-            ctx.fill();
-
-        } else if (tipo === "pendulo") {
-            const cx = canvas.width / 2;
-            const cy = 30;
-            const len = 120;
-            if (!isDraggingPendulo) {
-                const acel = (-0.4 / len) * Math.sin(anguloPendulo);
-                velAngular += acel;
-                anguloPendulo += velAngular;
-                velAngular *= 0.998;
-            }
-            const xE = cx + len * Math.sin(anguloPendulo);
-            const yE = cy + len * Math.cos(anguloPendulo);
-
-            // Cuerda
-            ctx.strokeStyle = isDraggingPendulo ? "#54e6a5" : "#24d9f2";
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.moveTo(cx, cy);
-            ctx.lineTo(xE, yE);
-            ctx.stroke();
-
-            // Esfera
-            ctx.fillStyle = isDraggingPendulo ? "#54e6a5" : "#9b7bff";
-            ctx.shadowColor = "#9b7bff";
-            ctx.shadowBlur = 15;
-            ctx.beginPath();
-            ctx.arc(xE, yE, 18, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.shadowBlur = 0;
-
-        } else if (tipo === "circuito") {
-            const cx = canvas.width / 2;
-            const cy = canvas.height / 2;
-            const V = simVars.param1 || 9;
-
-            ctx.strokeStyle = "#24d9f2";
-            ctx.lineWidth = 4;
-            ctx.strokeRect(cx - 150, cy - 65, 300, 130);
-
-            // Batería
-            ctx.fillStyle = "#f59e0b";
-            ctx.fillRect(cx - 160, cy - 20, 20, 40);
-            ctx.fillStyle = "#ffffff";
-            ctx.font = "bold 11px sans-serif";
-            ctx.fillText(`${V}V`, cx - 190, cy + 5);
-
-            // Foco
-            const brillo = Math.min(1, V / 15);
-            ctx.fillStyle = `rgba(255, 235, 59, ${0.25 + brillo * 0.75})`;
-            ctx.shadowColor = "#ffee55";
-            ctx.shadowBlur = brillo * 28;
-            ctx.beginPath();
-            ctx.arc(cx, cy + 65, 20, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.shadowBlur = 0;
-
-            // Electrones
-            ctx.fillStyle = "#24d9f2";
-            for (let i = 0; i < 8; i++) {
-                const pos = (t * 70 + i * (600 / 8)) % 600;
-                let ex = cx - 150, ey = cy - 65;
-                if (pos < 300) ex += pos;
-                else if (pos < 430) { ex += 300; ey += (pos - 300); }
-                else if (pos < 600) { ex = cx + 150 - (pos - 430); ey = cy + 65; }
-                ctx.beginPath();
-                ctx.arc(ex, ey, 3.5, 0, Math.PI * 2);
-                ctx.fill();
-            }
-
-        } else if (tipo === "ph") {
-            const cx = canvas.width / 2;
-            const cy = canvas.height / 2;
-            const ph = simVars.param1 || 7.0;
-            const col = ph < 6 ? "#ff70b7" : ph > 8 ? "#9b7bff" : "#54e6a5";
-
-            ctx.fillStyle = col;
-            ctx.shadowColor = col;
-            ctx.shadowBlur = 18;
-            ctx.fillRect(cx - 50, cy - 20, 100, 95);
-            ctx.shadowBlur = 0;
-
-            ctx.strokeStyle = "#a9b8ce";
-            ctx.lineWidth = 4;
-            ctx.strokeRect(cx - 55, cy - 30, 110, 110);
-
-        } else {
-            // Onda interactiva armónica
-            ctx.strokeStyle = "#24d9f2";
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            for (let i = 0; i < canvas.width; i += 15) {
-                const y = canvas.height / 2 + Math.sin(t * 1.5 + i * 0.04) * 35;
-                if (i === 0) ctx.moveTo(i, y);
-                else ctx.lineTo(i, y);
-            }
-            ctx.stroke();
-        }
-
-        animId = requestAnimationFrame(render);
-    }
-    render();
-}
-
-// Taller de circuitos
-function abrirConstructorCircuito() {
-    $("modalBuilderCircuito").classList.remove("hidden");
-    $("builderStepTag").innerText = "Paso 1 de 3";
-    $("builderInstruction").innerText = "1. Selecciona y coloca la Fuente de Voltaje (Batería):";
-    $("btnCompBateria").classList.remove("hidden");
-    $("btnCompCable").classList.add("hidden");
-    $("btnCompFoco").classList.add("hidden");
-    $("btnFinishCircuit").classList.add("hidden");
-    $("builderPreview").innerHTML = "<i>Tablero de pruebas listo...</i>";
-}
-
-function agregarComponenteCircuito(tipo) {
-    if (tipo === "bateria") {
-        $("builderPreview").innerHTML = "🔋 <b>Batería de 9V colocada.</b> Falta conectar los cables.";
-        $("btnCompBateria").classList.add("hidden");
-        $("btnCompCable").classList.remove("hidden");
-        $("builderStepTag").innerText = "Paso 2 de 3";
-        $("builderInstruction").innerText = "2. Conecta los cables conductores de cobre:";
-    } else if (tipo === "cable") {
-        $("builderPreview").innerHTML = "🔋 Batería + ⚡ <b>Cables conectados.</b> Falta el receptor de luz.";
-        $("btnCompCable").classList.add("hidden");
-        $("btnCompFoco").classList.remove("hidden");
-        $("builderStepTag").innerText = "Paso 3 de 3";
-        $("builderInstruction").innerText = "3. Instala la bombilla / foco para cerrar el circuito:";
-    } else if (tipo === "foco") {
-        $("builderPreview").innerHTML = "✅ <b>¡Circuito Completo y Energizado!</b> 🔋 Batería + ⚡ Cables + 💡 Foco.";
-        $("btnCompFoco").classList.add("hidden");
-        $("builderStepTag").innerText = "Completado";
-        $("builderInstruction").innerText = "¡Excelente trabajo! Todo está listo para la observación.";
-        $("btnFinishCircuit").classList.remove("hidden");
-    }
-}
-
-function completarConstruccionCircuito() {
-    $("modalBuilderCircuito").classList.add("hidden");
-    cambiarPaso(1);
-}
-
-// ==========================================================================
-// ASISTENTE DE IA NEXOR-IA
-// ==========================================================================
+/* NEXOR-IA DE APP2.JS INTEGRADO */
 function getAIResponse(question) {
     const text = question.toLowerCase();
 
-    if (text.includes("hola") || text.includes("buenos") || text.includes("saludos")) {
-        return `¡Hola ${student}! Soy NEXOR-IA. Estoy listo para ayudarte con fórmulas, hipótesis, simuladores de física, química y biología. ¿Qué te gustaría aprender hoy?`;
+    if (text.includes("hola") || text.includes("buenos")) {
+        return "¡Hola! Soy NEXOR-IA, tu asistente científico híbrido. Estoy aquí para ayudarte a descubrir, investigar y aprender.";
     }
     if (text.includes("velocidad") || text.includes("movimiento")) {
-        return "La velocidad media indica la distancia recorrida por unidad de tiempo: v = d / t. Por ejemplo, recorrer 100 metros en 10 segundos equivale a una velocidad media de 10 m/s (36 km/h).";
+        return "En Física, la velocidad media indica qué distancia se recorre durante cierto tiempo. Su fórmula es v = d / t. Por ejemplo, si recorres 100 metros en 10 segundos, tu velocidad media es de 10 m/s.";
     }
-    if (text.includes("ohm") || text.includes("electricidad") || text.includes("corriente") || text.includes("voltaje")) {
-        return "La Ley de Ohm establece que V = I · R (Voltaje = Corriente × Resistencia). Si aumentas el voltaje manteniendo fija la resistencia, la corriente aumenta y el foco brilla con mayor intensidad.";
+    if (text.includes("ohm") || text.includes("electricidad") || text.includes("corriente")) {
+        return "La ley de Ohm relaciona tres magnitudes eléctricas: voltaje (V), corriente (I) y resistencia (R). Su fórmula es V = I × R. Puedes probarla en el laboratorio de Física.";
     }
-    if (text.includes("atomo") || text.includes("átomo") || text.includes("proton") || text.includes("electron")) {
-        return "El átomo está compuesto por un núcleo central con Protones (+1) y Neutrones (neutros), rodeado por orbitales donde se encuentran los Electrones (-1).";
+    if (text.includes("atomo") || text.includes("átomo") || text.includes("proton") || text.includes("electrón")) {
+        return "Un átomo está formado por protones y neutrones en su núcleo, y electrones asociados a él. Los protones tienen carga positiva, los electrones negativa y los neutrones no tienen carga.";
     }
-    if (text.includes("mezcla") || text.includes("disolver") || text.includes("quimica")) {
-        return "Una mezcla homogénea presenta una sola fase (como sal disuelta en agua), mientras que una heterogénea presenta dos o más fases visibles (como agua con aceite o arena suspendida).";
+    if (text.includes("mezcla") || text.includes("quimica") || text.includes("química") || text.includes("disolver")) {
+        return "En Química, una mezcla es la combinación física de dos o más sustancias. Puede ser homogénea, si presenta una sola fase visible, o heterogénea, si presenta más de una fase.";
     }
     if (text.includes("fotosintesis") || text.includes("fotosíntesis") || text.includes("planta")) {
-        return "La fotosíntesis convierte energía luminosa, agua y CO2 en glucosa y oxígeno molecular (O2). En el simulador de Biología puedes mover el deslizador de luz para comprobar su efecto en la planta.";
+        return "La fotosíntesis es un proceso por el cual las plantas utilizan energía luminosa, agua y dióxido de carbono para producir azúcares y liberar oxígeno.";
     }
     if (text.includes("celula") || text.includes("célula")) {
-        return "La célula es la unidad básica de la vida. Entre sus estructuras principales destacan el núcleo (que resguarda el ADN), la membrana plasmática (regula el paso de sustancias) y el citoplasma.";
+        return "La célula es la unidad básica de los seres vivos. Entre sus estructuras principales están la membrana plasmática, el citoplasma y, en las células eucariotas, el núcleo.";
     }
-    if (text.includes("newton") || text.includes("fuerza") || text.includes("aceleracion")) {
-        return "La 2ª Ley de Newton establece que la aceleración es directamente proporcional a la fuerza neta aplicada e inversamente proporcional a la masa del cuerpo (F = m · a).";
+    if (text.includes("ayuda") || text.includes("experimento")) {
+        return "¡Claro! Puedes explorar los laboratorios tradicionales de Física, Química y Biología, o ir a la sección 'Misiones por Nivel' para realizar prácticas con el Método Científico completo en 7 pasos.";
     }
-    if (text.includes("hipotesis") || text.includes("hipótesis")) {
-        return "Una buena hipótesis científica predice una relación causal comprobable: 'Si [condición experimental], entonces [resultado predicho]'. Lo importante es que pueda someterse a pruebas empíricas.";
-    }
-    return `Excelente pregunta científica sobre "${question}". Para investigarla con rigor, primero delimitamos las variables que intervienen, formulamos una hipótesis predictiva y ejecutamos mediciones en nuestros laboratorios interactivos.`;
+    return "¡Buena pregunta! Para investigarla, primero identifica el tema científico, después plantea una hipótesis y busca evidencias. Puedo orientarte sobre Física, Química o Biología.";
 }
 
-$("chatForm").addEventListener("submit", function(e) {
-    e.preventDefault();
-    const input = $("chatInput");
-    const q = input.value.trim();
-    if (!q) return;
+window.addEventListener("DOMContentLoaded", () => {
+    const chatForm = $("chatForm");
+    if (chatForm) {
+        chatForm.addEventListener("submit", function(event) {
+            event.preventDefault();
+            const input = $("chatInput");
+            const question = input.value.trim();
+            if (!question) return;
 
-    appendMessage(q, "user-message");
-    input.value = "";
-    addActivity(`Consulta a NEXOR-IA: "${q.substring(0, 35)}..."`);
+            addMessage(question, "user-message");
+            input.value = "";
 
-    setTimeout(() => {
-        const resp = getAIResponse(q);
-        appendMessage(resp, "bot-message");
-    }, 350);
+            setTimeout(() => {
+                const response = getAIResponse(question);
+                addMessage(response, "bot-message");
+            }, 400);
+        });
+    }
 });
 
-function sendQuickChat(msg) {
-    $("chatInput").value = msg;
-    $("chatForm").dispatchEvent(new Event("submit"));
-}
+function addMessage(text, className) {
+    const chatMessages = $("chatMessages");
+    if (!chatMessages) return;
 
-function appendMessage(text, className) {
-    const box = $("chatMessages");
-    const div = document.createElement("div");
-    div.className = "message " + className;
-    div.textContent = text;
-    box.appendChild(div);
-    box.scrollTop = box.scrollHeight;
-}
+    const message = document.createElement("div");
+    message.className = "message " + className;
+    message.textContent = text;
 
-// Config Modal
-function toggleModalConfig() {
-    $("modalConfig").classList.toggle("hidden");
-    $("inputApiKey").value = localStorage.getItem("nexora_gemini_key") || "";
+    chatMessages.appendChild(message);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
 }
-
-function guardarApiKey() {
-    const k = $("inputApiKey").value.trim();
-    if (k) {
-        localStorage.setItem("nexora_gemini_key", k);
-        alert("¡Clave de IA guardada!");
-    } else {
-        localStorage.removeItem("nexora_gemini_key");
-        alert("Se utilizará la IA Local Autónoma de forma predeterminada.");
-    }
-    toggleModalConfig();
-}
-
-// Inicialización de la aplicación
-window.onload = () => {
-    cargarTemaGuardado();
-    syncRed();
-    updateProgressUI();
-    if (student) {
-        enterApp(student);
-    }
-};
