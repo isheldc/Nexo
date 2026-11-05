@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexora LAB - Laboratorio Virtual de Ciencias</title>
+    <meta name="description" content="Laboratorio virtual interactivo de física, química y biología con simulación científica, método experimental guiado y asistente NEXOR-IA." />
+    <meta property="og:title" content="Nexora LAB - Laboratorio Virtual de Ciencias" />
+    <meta property="og:description" content="Laboratorio virtual interactivo de física, química y biología con simulación científica, método experimental guiado y asistente NEXOR-IA." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+
+    <!-- ==========================================
+         PANTALLA DE ACCESO / LOGIN
+         ========================================== -->
+    <div id="loginScreen" class="login-screen">
+        <div class="login-card">
+            <div class="logo">🧪</div>
+            <h1>NEXORA <span>LAB</span></h1>
+            <p>La ciencia está en tus manos</p>
+
+            <form id="loginForm">
+                <label>Nombre del estudiante</label>
+                <input id="studentName" type="text" value="citlali" placeholder="Escribe tu nombre" required>
+
+                <label>Contraseña de demostración</label>
+                <input id="studentPassword" type="password" value="1234" placeholder="Mínimo 4 caracteres" minlength="4" required>
+
+                <button type="submit" class="primary-btn" style="width: 100%; margin-top: 18px;">
+                    Entrar al laboratorio 🚀
+                </button>
+            </form>
+
+            <button type="button" class="quick-access-btn" onclick="loginAsCitlali()">
+                👉 Acceso rápido como "citlali"
+            </button>
+            <small>Versión unificada gamer-science con modo oscuro y asistente de IA</small>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         APLICACIÓN PRINCIPAL
+         ========================================== -->
+    <div id="app" class="app hidden">
+
+        <!-- SIDEBAR DE NAVEGACIÓN -->
+        <aside class="sidebar">
+            <div>
+                <div class="brand">
+                    <span class="brand-icon">🧪</span>
+                    <div>
+                        <h2>NEXORA <span>LAB</span></h2>
+                        <small>Laboratorio virtual</small>
+                    </div>
+                </div>
+
+                <nav>
+                    <button class="nav-btn active" data-section="inicio">🏠 Inicio</button>
+                    <button class="nav-btn" data-section="fisica">⚡ Física</button>
+                    <button class="nav-btn" data-section="quimica">🧬 Química</button>
+                    <button class="nav-btn" data-section="biologia">🌱 Biología</button>
+                    <button class="nav-btn" data-section="misiones">
+                        🔬 Misiones Pro
+                        <span class="badge-tag">18 Labs</span>
+                    </button>
+                    <button class="nav-btn" data-section="evaluacion">📝 Evaluaciones</button>
+                    <button class="nav-btn" data-section="progreso">🏆 Mi progreso</button>
+                    <button class="nav-btn" data-section="ia">🤖 NEXOR-IA</button>
+                </nav>
+            </div>
+
+            <div class="sidebar-bottom">
+                <p>"Aprender es experimentar."</p>
+                <button id="logoutBtn" class="logout-btn">Cerrar sesión</button>
+            </div>
+        </aside>
+
+        <!-- CONTENIDO PRINCIPAL -->
+        <main class="main-content">
+
+            <!-- TOPBAR -->
+            <header class="topbar">
+                <div>
+                    <h2 id="pageTitle">Bienvenido al laboratorio</h2>
+                    <p id="pageSubtitle">Explora, experimenta y descubre.</p>
+                </div>
+                <div class="topbar-actions">
+                    <span id="estado-red" class="pill-status">🟢 En línea</span>
+                    <button id="btn-theme" class="btn-icon" onclick="toggleTheme()" title="Modo Oscuro / Claro">🌙</button>
+                    <button class="btn-icon" onclick="toggleModalConfig()" title="Configuración de IA">⚙️</button>
+                    <div class="student-info">
+                        <span>👩‍🔬</span>
+                        <strong id="welcomeName">citlali</strong>
+                    </div>
+                </div>
+            </header>
+
+            <!-- SECCIÓN 1: INICIO (MATCH SCREENSHOT) -->
+            <section id="inicio" class="section active-section">
+                <div class="hero">
+                    <div>
+                        <span class="tag">TU AVENTURA CIENTÍFICA COMIENZA AQUÍ</span>
+                        <h1>¡Hola, <span id="heroName">citlali</span>!</h1>
+                        <p>
+                            No necesitas un laboratorio físico para descubrir
+                            cómo funciona el mundo. Experimenta desde aquí.
+                        </p>
+                        <div class="hero-buttons">
+                            <button class="primary-btn" onclick="showSection('fisica')">
+                                Comenzar a experimentar →
+                            </button>
+                            <button class="secondary-btn" onclick="showSection('misiones')">
+                                🔬 Misiones Gamer-Science (18 Labs)
+                            </button>
+                        </div>
+                    </div>
+                    <div class="hero-emoji">🔬</div>
+                </div>
+
+                <h2 class="section-heading">Explora tus laboratorios</h2>
+
+                <div class="subject-grid">
+                    <article class="subject-card physics">
+                        <div>
+                            <div class="subject-icon">⚡</div>
+                            <h3>Física</h3>
+                            <p>Movimiento, velocidad, electricidad y energía.</p>
+                        </div>
+                        <button onclick="showSection('fisica')">Entrar al laboratorio</button>
+                    </article>
+
+                    <article class="subject-card chemistry">
+                        <div>
+                            <div class="subject-icon">🧪</div>
+                            <h3>Química</h3>
+                            <p>Materia, mezclas, átomos y transformaciones.</p>
+                        </div>
+                        <button onclick="showSection('quimica')">Entrar al laboratorio</button>
+                    </article>
+
+                    <article class="subject-card biology">
+                        <div>
+                            <div class="subject-icon">🌱</div>
+                            <h3>Biología</h3>
+                            <p>Células, seres vivos y procesos naturales.</p>
+                        </div>
+                        <button onclick="showSection('biologia')">Entrar al laboratorio</button>
+                    </article>
+                </div>
+
+                <!-- Info Banner NEXOR-IA -->
+                <div class="info-banner">
+                    <div>
+                        <h3>🤖 ¿Necesitas ayuda?</h3>
+                        <p>NEXOR-IA puede orientarte mientras aprendes.</p>
+                    </div>
+                    <button onclick="showSection('ia')">Hablar con NEXOR-IA</button>
+                </div>
+            </section>
+
+            <!-- SECCIÓN 2: FÍSICA -->
+            <section id="fisica" class="section">
+                <div class="section-intro">
+                    <span class="tag">LABORATORIO 01</span>
+                    <h1>⚡ Laboratorio de Física</h1>
+                    <p>Modifica los valores interactivos y observa cómo cambian los resultados físicos.</p>
+                </div>
+
+                <div class="experiment-grid">
+                    <article class="experiment-card">
+                        <h3>🚗 Simulador de velocidad</h3>
+                        <p>Investiga la relación entre distancia, tiempo y rapidez.</p>
+
+                        <label>Distancia (metros)</label>
+                        <input type="number" id="distance" value="100" min="0">
+
+                        <label>Tiempo (segundos)</label>
+                        <input type="number" id="time" value="10" min="0.1" step="0.1">
+
+                        <button class="primary-btn" onclick="calculateSpeed()">Calcular velocidad</button>
+                        <div id="speedResult" class="result-box">Aquí aparecerá el resultado cuantitativo.</div>
+                    </article>
+
+                    <article class="experiment-card">
+                        <h3>💡 Ley de Ohm</h3>
+                        <p>Explora la relación entre voltaje, corriente y resistencia eléctrica.</p>
+
+                        <label>Voltaje (V)</label>
+                        <input type="number" id="voltage" value="12" min="0">
+
+                        <label>Resistencia (Ω)</label>
+                        <input type="number" id="resistance" value="4" min="0.1" step="0.1">
+
+                        <button class="primary-btn" onclick="calculateOhm()">Calcular corriente</button>
+                        <div id="ohmResult" class="result-box">Aquí aparecerá el flujo de corriente medido.</div>
+                    </article>
+                </div>
+
+                <div class="learning-note">
+                    <strong>💡 Aprende Física:</strong>
+                    La velocidad media se calcula dividiendo la distancia entre el tiempo (v = d/t). Por su parte, la Ley de Ohm establece que la corriente es proporcional al voltaje e inversamente proporcional a la resistencia (I = V/R).
+                </div>
+            </section>
+
+            <!-- SECCIÓN 3: QUÍMICA -->
+            <section id="quimica" class="section">
+                <div class="section-intro">
+                    <span class="tag">LABORATORIO 02</span>
+                    <h1>🧪 Laboratorio de Química</h1>
+                    <p>Explora mezclas virtuales, la estructura del átomo y el equilibrio de pH.</p>
+                </div>
+
+                <article class="experiment-card wide-card">
+                    <h3>⚗️ Simulador de mezclas conceptuales</h3>
+                    <p>Selecciona dos sustancias para observar qué ocurre en esta simulación de interacción entre fases.</p>
+
+                    <div class="mix-selectors">
+                        <div>
+                            <label>Primera sustancia</label>
+                            <select id="substanceOne">
+                                <option value="agua">💧 Agua</option>
+                                <option value="aceite">🫒 Aceite</option>
+                                <option value="sal">🧂 Sal</option>
+                                <option value="azucar">🍬 Azúcar</option>
+                                <option value="arena">🏖️ Arena</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Segunda sustancia</label>
+                            <select id="substanceTwo">
+                                <option value="sal">🧂 Sal</option>
+                                <option value="agua">💧 Agua</option>
+                                <option value="aceite">🫒 Aceite</option>
+                                <option value="azucar">🍬 Azúcar</option>
+                                <option value="arena">🏖️ Arena</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="beaker">🧪</div>
+                    <button class="primary-btn" onclick="mixSubstances()">Realizar mezcla virtual</button>
+                    <div id="mixResult" class="result-box">Selecciona las sustancias para comenzar.</div>
+                    <p class="safety-note">
+                        Simulación educativa: no representa una práctica real. No mezcles sustancias químicas fuera de un laboratorio supervisado.
+                    </p>
+                </article>
+
+                <div class="experiment-grid">
+                    <!-- ÁTOMO -->
+                    <article class="experiment-card">
+                        <h3>⚛️ Conoce la estructura del átomo</h3>
+                        <p>Selecciona un elemento para ver sus partículas subatómicas:</p>
+                        <div style="display:flex; gap:6px; margin: 10px 0; flex-wrap:wrap;">
+                            <button class="chip-btn selected" id="btn-atom-Carbono" onclick="selectAtom('Carbono')">Carbono</button>
+                            <button class="chip-btn" id="btn-atom-Hidrogeno" onclick="selectAtom('Hidrogeno')">Hidrógeno</button>
+                            <button class="chip-btn" id="btn-atom-Helio" onclick="selectAtom('Helio')">Helio</button>
+                            <button class="chip-btn" id="btn-atom-Litio" onclick="selectAtom('Litio')">Litio</button>
+                            <button class="chip-btn" id="btn-atom-Oxigeno" onclick="selectAtom('Oxigeno')">Oxígeno</button>
+                        </div>
+                        <div class="atom-area">
+                            <div class="atom">⚛️</div>
+                            <div class="atom-info">
+                                <h4 id="atomName" style="color:var(--cyan); margin-bottom:6px;">Carbono (Z = 6)</h4>
+                                <p><strong>🔴 Protones (p⁺):</strong> <span id="atomP">6</span> (carga positiva)</p>
+                                <p><strong>⚪ Neutrones (n⁰):</strong> <span id="atomN">6</span> (sin carga eléctrica)</p>
+                                <p><strong>🔵 Electrones (e⁻):</strong> <span id="atomE">6</span> (carga negativa)</p>
+                                <small style="color:var(--green)">Configuración: <span id="atomConfig">1s² 2s² 2p²</span></small>
+                            </div>
+                        </div>
+                    </article>
+
+                    <!-- ESCALA DE PH -->
+                    <article class="experiment-card">
+                        <h3>💧 Escala de pH Exprés</h3>
+                        <p>Mide la concentración de iones [H⁺]: pH &lt; 7 es ácido, 7 es neutro y &gt; 7 alcalino.</p>
+                        <div style="background:var(--box-inner-bg); padding:16px; border-radius:12px; text-align:center; margin:15px 0;">
+                            <span style="font-size:12px; color:var(--muted); text-transform:uppercase;">pH de la solución:</span>
+                            <div id="livePhVal" style="font-size:36px; font-weight:900; color:var(--green); font-family:'JetBrains Mono', monospace;">7.00</div>
+                            <small id="livePhDesc" style="font-weight:800; color:var(--text);">🟢 Neutro</small>
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <button class="secondary-btn" style="flex:1;" onclick="adjustQuickPh(-1.2, 'Ácido Clorhídrico')">+ HCl (Ácido)</button>
+                            <button class="secondary-btn" style="flex:1;" onclick="adjustQuickPh(1.2, 'Hidróxido de Sodio')">+ NaOH (Base)</button>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            <!-- SECCIÓN 4: BIOLOGÍA -->
+            <section id="biologia" class="section">
+                <div class="section-intro">
+                    <span class="tag">LABORATORIO 03</span>
+                    <h1>🌱 Laboratorio de Biología</h1>
+                    <p>Descubre cómo funcionan los seres vivos y la fotosíntesis celular.</p>
+                </div>
+
+                <article class="experiment-card wide-card">
+                    <h3>🌞 Simulador de fotosíntesis</h3>
+                    <p>Modifica la intensidad de luz solar y observa la respuesta biológica en tiempo real.</p>
+
+                    <label>Intensidad de luz solar: <strong id="lightValue" style="color:var(--green)">50%</strong></label>
+                    <input type="range" id="lightSlider" min="0" max="100" value="50">
+
+                    <div class="plant-display">
+                        <span id="plantEmoji">🌿</span>
+                    </div>
+
+                    <div id="photoResult" class="result-box">
+                        La planta cuenta con una intensidad de luz intermedia. La luz excita los electrones de la clorofila para descomponer agua y fijar dióxido de carbono en azúcares.
+                    </div>
+                </article>
+
+                <article class="experiment-card wide-card">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <h3>🔬 Partes principales de la célula</h3>
+                        <div style="display:flex; gap:8px;">
+                            <button class="chip-btn" onclick="selectCellType('animal')">Célula Animal</button>
+                            <button class="chip-btn" onclick="selectCellType('vegetal')">Célula Vegetal</button>
+                        </div>
+                    </div>
+
+                    <div class="cell-grid">
+                        <div class="cell-part">
+                            <span>🟣</span>
+                            <strong>Núcleo</strong>
+                            <p>Contiene el material genético (ADN) y coordina la síntesis de proteínas.</p>
+                        </div>
+                        <div class="cell-part">
+                            <span>🫧</span>
+                            <strong>Membrana</strong>
+                            <p>Regula el intercambio selectivo de nutrientes y agua por ósmosis.</p>
+                        </div>
+                        <div class="cell-part">
+                            <span>🔵</span>
+                            <strong>Citoplasma</strong>
+                            <p>Medio acuoso coloidal donde operan las mitocondrias y ribosomas.</p>
+                        </div>
+                    </div>
+
+                    <div id="vegetalNote" class="learning-note hidden" style="margin-top:15px;">
+                        🌿 <b>Especialidades de la Célula Vegetal:</b> Contiene cloroplastos con clorofila fotosintética, una pared celular de celulosa rígida y una vacuola central para mantener la turgencia hídrica.
+                    </div>
+                </article>
+            </section>
+
+            <!-- SECCIÓN 5: MISIONES CIENTÍFICAS PRO (7 PASOS DEL MÉTODO CIENTÍFICO) -->
+            <section id="misiones" class="section">
+                <!-- VISTA HUB DE MISIONES -->
+                <div id="misionesHub">
+                    <div class="section-intro">
+                        <span class="tag">MÉTODO CIENTÍFICO INTEGRAL EN 7 PASOS</span>
+                        <h1>🔬 Misiones Científicas Pro</h1>
+                        <p>Selecciona tu nivel escolar y explora los 18 experimentos interactivos de física, química y biología.</p>
+                    </div>
+
+                    <div class="level-switcher">
+                        <button id="btn-lvl-Secundaria" class="level-btn active" onclick="seleccionarNivelMisiones('Secundaria')">
+                            Secundaria (12 - 15 años)
+                        </button>
+                        <button id="btn-lvl-Preparatoria" class="level-btn" onclick="seleccionarNivelMisiones('Preparatoria')">
+                            Preparatoria (15 - 18 años)
+                        </button>
+                    </div>
+
+                    <div class="subjects-tabs">
+                        <button id="btn-mat-Fisica" class="tab-btn active" onclick="seleccionarMateriaMisiones('Fisica')">
+                            <span style="font-size:24px;">⚡</span> Física
+                        </button>
+                        <button id="btn-mat-Quimica" class="tab-btn" onclick="seleccionarMateriaMisiones('Quimica')">
+                            <span style="font-size:24px;">🧪</span> Química
+                        </button>
+                        <button id="btn-mat-Biologia" class="tab-btn" onclick="seleccionarMateriaMisiones('Biologia')">
+                            <span style="font-size:24px;">🌱</span> Biología
+                        </button>
+                    </div>
+
+                    <div id="listaMisionesHub" class="missions-list"></div>
+                </div>
+
+                <!-- VISTA DE LABORATORIO EN VIVO CON LOS 7 PASOS -->
+                <div id="misionLabCard" class="experiment-card hidden">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                        <button class="secondary-btn" style="padding:6px 14px; font-size:12px;" onclick="volverAListaMisiones()">← Volver a misiones</button>
+                        <span id="labTag" class="pill-status">FÍSICA · SECUNDARIA</span>
+                    </div>
+
+                    <h2 id="labTitulo" style="font-size:24px; font-weight:900; margin-bottom:10px;">Título de Misión</h2>
+
+                    <div class="progress-track">
+                        <div id="progressFill" class="progress-fill" style="width: 14.28%;"></div>
+                    </div>
+                    <div id="stepName" class="step-label">Paso 1 de 7: Observación</div>
+
+                    <!-- PASO 1: OBSERVACIÓN -->
+                    <div id="step-panel-1" class="step-panel">
+                        <div class="definition-box">
+                            <b>📖 ¿Qué es observar?</b> Usar los sentidos o instrumentos para notar qué cambia, qué patrones existen y qué nos llama la atención en el fenómeno.
+                        </div>
+                        <div class="canvas-container">
+                            <canvas id="canvasObs"></canvas>
+                        </div>
+                        <label>👀 ¿Qué fenómeno visual identificas claramente arriba?</label>
+                        <div id="quizObsOptions" class="quiz-options"></div>
+
+                        <label style="margin-top:16px;">Tus notas rápidas de campo (opcional):</label>
+                        <input id="inputObsExtra" type="text" placeholder="Ej: Noto que el cuerpo acelera al empujar...">
+
+                        <button class="primary-btn" style="width:100%; margin-top:20px;" onclick="avanzarPaso(1, 2)">
+                            ¡Entendido! Vamos a preguntar →
+                        </button>
+                    </div>
+
+                    <!-- PASO 2: PLANTEAMIENTO -->
+                    <div id="step-panel-2" class="step-panel hidden">
+                        <div class="definition-box">
+                            <b>❓ El Problema Científico:</b> Toda ciencia nace con una duda investigable: <i>"¿Cómo influye la variable X en el resultado de Y?"</i>
+                        </div>
+                        <label>Selecciona la pregunta de investigación más acertada:</label>
+                        <div id="quizProbOptions" class="quiz-options"></div>
+
+                        <label style="margin-top:16px;">O redacta tu propia pregunta personalizada:</label>
+                        <input id="inputProblemaLibre" type="text" placeholder="¿Cómo influye la variable... en...?">
+
+                        <div class="btn-duo">
+                            <button class="secondary-btn" onclick="cambiarPaso(1)">← Atrás</button>
+                            <button class="primary-btn" onclick="avanzarPaso(2, 3)">Siguiente: Hipótesis →</button>
+                        </div>
+                    </div>
+
+                    <!-- PASO 3: HIPÓTESIS -->
+                    <div id="step-panel-3" class="step-panel hidden">
+                        <div class="definition-box">
+                            <b>💡 ¿Qué es una Hipótesis?</b> Tu predicción informada. Lo esencial es que sea comprobable mediante ensayos experimentales.
+                        </div>
+                        <div class="hb-builder">
+                            <label>SI aplicamos la condición experimental:</label>
+                            <select id="hbCondicion" onchange="actualizarPreviewHipotesis()"></select>
+
+                            <label style="margin-top:12px;">ENTONCES predecimos que:</label>
+                            <select id="hbEfecto" onchange="actualizarPreviewHipotesis()"></select>
+
+                            <div id="hbPreviewText" class="hb-preview">"Si aumentamos la fuerza, entonces acelerará más rápido."</div>
+                        </div>
+                        <div class="btn-duo">
+                            <button class="secondary-btn" onclick="cambiarPaso(2)">← Atrás</button>
+                            <button class="primary-btn" onclick="avanzarPaso(3, 4)">¡A Experimentar en el Simulador! →</button>
+                        </div>
+                    </div>
+
+                    <!-- PASO 4: EXPERIMENTACIÓN -->
+                    <div id="step-panel-4" class="step-panel hidden">
+                        <div class="definition-box">
+                            <b>🎮 Experimentación Virtual:</b> Modifica los controles interactivos y ejecuta ensayos. Tus lecturas se registrarán automáticamente en la tabla de datos.
+                        </div>
+                        <div class="canvas-container">
+                            <canvas id="canvasExp"></canvas>
+                        </div>
+                        <div id="simControlsContainer" style="background:var(--box-inner-bg); padding:16px; border-radius:12px; margin-bottom:14px; border:1px solid var(--border);"></div>
+
+                        <div class="btn-duo">
+                            <button class="secondary-btn" onclick="cambiarPaso(3)">← Atrás</button>
+                            <button class="primary-btn" onclick="cambiarPaso(5)">Ver Tabla de Datos →</button>
+                        </div>
+                    </div>
+
+                    <!-- PASO 5: ANÁLISIS DE DATOS -->
+                    <div id="step-panel-5" class="step-panel hidden">
+                        <div class="definition-box">
+                            <b>📊 Análisis de Datos:</b> Es buscar patrones en las mediciones. ¿Al aumentar la entrada, el resultado crece, disminuye o no cambia?
+                        </div>
+                        <div style="overflow-x:auto;">
+                            <table class="neon-table">
+                                <thead>
+                                    <tr>
+                                        <th>Ensayo</th>
+                                        <th>Variable de Control</th>
+                                        <th>Resultado Medido</th>
+                                        <th>Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tablaRegistrosBody"></tbody>
+                            </table>
+                        </div>
+
+                        <label style="margin-top:14px;">¿Qué tendencia matemática u observacional descubres?</label>
+                        <div id="quizAnalisisOptions" class="quiz-options"></div>
+
+                        <div class="btn-duo">
+                            <button class="secondary-btn" onclick="cambiarPaso(4)">← Volver al Simulador</button>
+                            <button class="primary-btn" onclick="avanzarPaso(5, 6)">Siguiente: Conclusión →</button>
+                        </div>
+                    </div>
+
+                    <!-- PASO 6: CONCLUSIÓN -->
+                    <div id="step-panel-6" class="step-panel hidden">
+                        <div class="definition-box">
+                            <b>🏆 La Conclusión:</b> Responder con rigor: ¿Nuestras mediciones empíricas confirmaron la hipótesis planteada en el Paso 3?
+                        </div>
+                        <div style="background:var(--box-inner-bg); padding:12px 16px; border-radius:10px; margin-bottom:14px; border:1px solid var(--border);">
+                            <span style="font-size:11px; text-transform:uppercase; color:var(--cyan); font-weight:800;">Recordatorio de tu Hipótesis:</span>
+                            <div id="txtHipRecordatorio" style="font-weight:700; font-style:italic; margin-top:4px;">"..."</div>
+                        </div>
+
+                        <label>Con base en tus mediciones registradas en la tabla:</label>
+                        <div id="quizConclusionOptions" class="quiz-options"></div>
+
+                        <label style="margin-top:14px;">Justifica con tus propias palabras:</label>
+                        <textarea id="inputConclusionTexto" style="height:70px; resize:none;" placeholder="Se valida/refuta porque los datos mostraron que al aumentar..."></textarea>
+
+                        <div class="btn-duo">
+                            <button class="secondary-btn" onclick="cambiarPaso(5)">← Atrás</button>
+                            <button class="primary-btn" onclick="avanzarPaso(6, 7)">Último Paso: Publicar →</button>
+                        </div>
+                    </div>
+
+                    <!-- PASO 7: COMUNICACIÓN / DIVULGACIÓN -->
+                    <div id="step-panel-7" class="step-panel hidden">
+                        <div class="definition-box">
+                            <b>📢 Comunicación Científica:</b> Todo científico debe divulgar su hallazgo al mundo de forma clara, motivadora y veraz.
+                        </div>
+                        <label>Elige el titular de divulgación científica para tu reporte escolar:</label>
+                        <div id="quizComOptions" class="quiz-options"></div>
+
+                        <button class="action-btn" style="margin-top:25px;" onclick="ejecutarEvaluacionMisionFinal()">
+                            ⚡ Evaluar mi Desempeño con IA Híbrida ⚡
+                        </button>
+                    </div>
+                </div>
+
+                <!-- DICTAMEN DE EVALUACIÓN FINAL DE MISIÓN (100/100 GARANTIZADO SI TODO ESTÁ COMPLETO) -->
+                <div id="dictamenCard" class="experiment-card hidden">
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); padding-bottom:14px;">
+                        <div>
+                            <h2 style="font-size:22px; font-weight:900;">Dictamen de la Misión Científica</h2>
+                            <span class="pill-status" style="font-size:11px; margin-top:4px; display:inline-block;">IA Local Autónoma Evaluadora</span>
+                        </div>
+                        <div id="dictamenRank" class="rank-badge">🏆 Maestro del Cosmos</div>
+                    </div>
+
+                    <div class="score-display-box">
+                        <span style="font-size:12px; text-transform:uppercase; font-weight:800; color:var(--muted); letter-spacing:1px;">
+                            Calificación de Rigor Científico
+                        </span>
+                        <div id="dictamenScore" class="score-number">100 / 100 PTS</div>
+                        <p id="dictamenMsg" style="color:var(--text); font-size:14px; max-width:600px; margin:10px auto 0; line-height:1.6;"></p>
+                    </div>
+
+                    <h4 style="font-size:12px; font-weight:900; text-transform:uppercase; color:var(--muted); margin-bottom:10px;">
+                        Rúbrica de Evaluación por Pasos:
+                    </h4>
+                    <div id="dictamenRubrica"></div>
+
+                    <div class="btn-duo" style="margin-top:25px;">
+                        <button class="secondary-btn" onclick="cambiarPaso(5)">Revisar Datos de Laboratorio</button>
+                        <button class="primary-btn" onclick="volverAListaMisiones()">Comenzar Nuevo Experimento 🚀</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECCIÓN 6: EVALUACIONES (CUESTIONARIOS CON NOTA 100/100) -->
+            <section id="evaluacion" class="section">
+                <div class="section-intro">
+                    <span class="tag">PON A PRUEBA TUS CONOCIMIENTOS</span>
+                    <h1>📝 Evaluaciones Científicas</h1>
+                    <p>Responde las preguntas y comprueba tu comprensión de conceptos clave.</p>
+                </div>
+
+                <article class="experiment-card quiz-card">
+                    <div class="quiz-top">
+                        <span>🧪 Cuestionario Científico Multidisciplinario</span>
+                        <span id="quizCounter">Pregunta 1</span>
+                    </div>
+                    <h2 id="quizQuestion" style="font-size:22px; font-weight:900; margin-bottom:18px;">¿Qué es la velocidad?</h2>
+                    <div id="quizOptions" class="quiz-options"></div>
+                    <div id="quizFeedback" class="result-box hidden"></div>
+                    <button id="nextQuestion" class="primary-btn hidden" style="width:100%; margin-top:16px;">Siguiente pregunta →</button>
+                    <button id="restartQuiz" class="secondary-btn" style="margin-top:14px; width:100%;">Reiniciar evaluación</button>
+                </article>
+            </section>
+
+            <!-- SECCIÓN 7: MI PROGRESO -->
+            <section id="progreso" class="section">
+                <div class="section-intro">
+                    <span class="tag">TU APRENDIZAJE</span>
+                    <h1>🏆 Mi progreso y Logros</h1>
+                    <p>Consulta las actividades que has realizado en este navegador.</p>
+                </div>
+
+                <div class="progress-grid">
+                    <div class="progress-card">
+                        <span>🧪</span>
+                        <div>
+                            <h2 id="experimentCount">0</h2>
+                            <p>Simulaciones realizadas</p>
+                        </div>
+                    </div>
+                    <div class="progress-card">
+                        <span>⭐</span>
+                        <div>
+                            <h2 id="quizScore">0</h2>
+                            <p>Respuestas correctas</p>
+                        </div>
+                    </div>
+                    <div class="progress-card">
+                        <span>🎯</span>
+                        <div>
+                            <h2 id="missionCount">0</h2>
+                            <p>Misiones completadas</p>
+                        </div>
+                    </div>
+                    <div class="progress-card">
+                        <span>🏅</span>
+                        <div>
+                            <h2 id="userRankTitle" style="font-size:16px; color:var(--cyan);">Novato</h2>
+                            <p>Rango Científico</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Insignias -->
+                <article class="experiment-card wide-card">
+                    <h3>🎖️ Insignias Científicas</h3>
+                    <div class="badges-grid">
+                        <div class="badge-item">
+                            <span>⚡</span>
+                            <strong>Experto en Circuitos</strong>
+                            <small>Probó la Ley de Ohm</small>
+                        </div>
+                        <div class="badge-item">
+                            <span>🧪</span>
+                            <strong>Alquimista de Mezclas</strong>
+                            <small>Diferenció fases homogéneas</small>
+                        </div>
+                        <div class="badge-item">
+                            <span>🌱</span>
+                            <strong>Bio-Investigador</strong>
+                            <small>Modeló la fotosíntesis</small>
+                        </div>
+                        <div class="badge-item">
+                            <span>🏆</span>
+                            <strong>Científico Riguroso</strong>
+                            <small>Completó evaluaciones</small>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Historial -->
+                <article class="experiment-card wide-card">
+                    <h3>📚 Historial de Actividad</h3>
+                    <div id="activityHistory" style="margin-top:12px;"></div>
+                </article>
+            </section>
+
+            <!-- SECCIÓN 8: NEXOR-IA -->
+            <section id="ia" class="section">
+                <div class="section-intro">
+                    <span class="tag">ASISTENTE EDUCATIVO</span>
+                    <h1>🤖 NEXOR-IA</h1>
+                    <p>Tu tutor personal para explorar el fascinante mundo de la ciencia.</p>
+                </div>
+
+                <div class="chat-card">
+                    <div class="chat-header">
+                        <div class="robot-icon">🤖</div>
+                        <div>
+                            <strong>NEXOR-IA</strong>
+                            <small>Asistente educativo inteligente de Nexora LAB</small>
+                        </div>
+                        <span class="online-dot"></span>
+                    </div>
+
+                    <div id="chatMessages" class="chat-messages">
+                        <div class="message bot-message">
+                            ¡Hola! Soy NEXOR-IA. Puedo ayudarte a comprender conceptos de Física, Química y Biología, formular hipótesis o explicarte los resultados de cualquier simulación. ¿Qué te gustaría investigar hoy?
+                        </div>
+                    </div>
+
+                    <!-- Chips de preguntas rápidas -->
+                    <div class="chat-chips">
+                        <button class="chip-btn" onclick="sendQuickChat('¿Cómo funciona la Ley de Ohm?')">💬 Ley de Ohm</button>
+                        <button class="chip-btn" onclick="sendQuickChat('¿Qué es la fotosíntesis y por qué libera O2?')">💬 Fotosíntesis</button>
+                        <button class="chip-btn" onclick="sendQuickChat('¿Por qué el agua y el aceite no se mezclan?')">💬 Agua y Aceite</button>
+                        <button class="chip-btn" onclick="sendQuickChat('¿Qué establece la 2ª Ley de Newton (F = m·a)?')">💬 2ª Ley de Newton</button>
+                        <button class="chip-btn" onclick="sendQuickChat('¿Cómo formular una buena hipótesis científica?')">💬 Formular Hipótesis</button>
+                    </div>
+
+                    <form id="chatForm" class="chat-form">
+                        <input id="chatInput" type="text" placeholder="Escribe tu pregunta sobre física, química o biología..." required>
+                        <button type="submit">Enviar ➤</button>
+                    </form>
+                </div>
+            </section>
+
+            <footer>
+                <p>© 2026 Nexora LAB · La ciencia está en tus manos 🔬</p>
+            </footer>
+        </main>
+    </div>
+
+    <!-- ==========================================
+         MODALES: ENSAMBLAJE DE CIRCUITOS & CONFIG IA
+         ========================================== -->
+    <div id="modalBuilderCircuito" class="modal-backdrop hidden">
+        <div class="modal-content">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="font-size:18px; font-weight:900;">🔌 Taller de Ensamblaje de Circuitos</h3>
+                <span id="builderStepTag" class="pill-status">Paso 1 de 3</span>
+            </div>
+            <p id="builderInstruction" style="color:var(--cyan); font-weight:700; margin:14px 0 8px; font-size:14px;">
+                1. Selecciona y coloca la Fuente de Voltaje (Batería):
+            </p>
+            <div style="display:flex; justify-content:center; gap:10px; margin:15px 0;">
+                <button class="primary-btn" id="btnCompBateria" onclick="agregarComponenteCircuito('bateria')">🔋 Batería (9V)</button>
+                <button class="primary-btn hidden" id="btnCompCable" onclick="agregarComponenteCircuito('cable')">⚡ Cables de Cobre</button>
+                <button class="primary-btn hidden" id="btnCompFoco" onclick="agregarComponenteCircuito('foco')">💡 Foco / Receptor</button>
+            </div>
+            <div id="builderPreview" style="background:var(--box-inner-bg); border:1px dashed var(--border); padding:16px; border-radius:10px; text-align:center; min-height:80px; font-size:13px; color:var(--muted);">
+                <i>Tablero de pruebas listo...</i>
+            </div>
+            <button id="btnFinishCircuit" class="primary-btn hidden" style="width:100%; margin-top:20px;" onclick="completarConstruccionCircuito()">
+                ¡Circuito Listo! Ir a Observación →
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL CONFIG IA -->
+    <div id="modalConfig" class="modal-backdrop hidden">
+        <div class="modal-content">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="font-size:18px; font-weight:900;">⚙️ Configuración de IA</h3>
+                <button class="btn-icon" onclick="toggleModalConfig()">✕</button>
+            </div>
+            <p style="font-size:13px; color:var(--muted); line-height:1.5; margin:12px 0;">
+                Nexora LAB cuenta con <b>IA Local Autónoma integrada</b> que evalúa hipótesis y responde dudas al 100% sin conexión externa. Si deseas conectar Google Gemini en la nube, ingresa tu clave API:
+            </p>
+            <input type="password" id="inputApiKey" placeholder="Pega tu Gemini API Key (Opcional)">
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button class="primary-btn" style="flex:1;" onclick="guardarApiKey()">Guardar Clave</button>
+                <button class="secondary-btn" style="flex:0.5;" onclick="toggleModalConfig()">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="./app.js"></script>
+</body>
+</html>
