@@ -1368,4 +1368,32 @@ footer {
         overflow-y: auto !important;
     }
 }
+/* ==========================================
+   FORZAR COLUMNA VERTICAL EN CELULARES
+   ========================================== */
+@media (max-width: 768px) {
+    .circuit-workbench-grid {
+        display: flex !important;
+        flex-direction: column !important;
+        position: relative !important;
+        width: 100% !important;
+    }
+
+    .circuit-components-sidebar {
+        display: block !important;
+        position: relative !important;
+        width: 100% !important.
+        max-width: 100% !important;
+        right: auto !important;
+        left: auto !important;
+        top: auto !important;
+        transform: none !important;
+        margin-top: 15px !important;
+        box-shadow: none !important;
+    }
+
+    .circuit-schematic-wrapper {
+        width: 100% !important;
+    }
 }
+
