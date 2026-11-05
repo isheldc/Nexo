@@ -1314,4 +1314,19 @@ footer {
     max-height: 100%;
     filter: drop-shadow(0 0 6px rgba(168, 85, 247, 0.7));
 }
+/* ==========================================
+   ESTILOS DE POSICIONAMIENTO ABSOLUTO TALLER
+   ========================================== */
+.circuit-canvas-black {
+    position: relative !important;
+    background: #000000 !important;
+    height: 350px !important;
+    width: 100% !important;
+    overflow: hidden !important;
+}
+
+.slot-target {
+    position: absolute !important;
+    z-index: 5 !important;
+}
 }
