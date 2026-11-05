@@ -1783,10 +1783,10 @@ async function ejecutarEvaluacionFinal() {
     const loader = $("eval-loader");
     const content = $("eval-content");
     const motorTag = $("eval-motor");
-    const rankTag = $("eval-badge-rank");
+    const rankTag = $("eval-rank-badge") || $("eval-badge-rank");
 
     if (loader) loader.classList.remove("hidden");
-    if (content) content.innerHTML = "";
+    if (content) content.classList.add("hidden");
 
     const obsInput = $("input-obs-extra");
     const concInput = $("input-conclusion-texto");
@@ -1810,37 +1810,47 @@ async function ejecutarEvaluacionFinal() {
         dictamen = evaluarConIALocalAdaptada();
     }
 
+    if (!dictamen) {
+        dictamen = evaluarConIALocalAdaptada();
+    }
+
     if (loader) loader.classList.add("hidden");
 
     if (rankTag) {
         if (dictamen.puntaje >= 90) {
-            rankTag.innerText = "🏆 Maestro del Cosmos";
+            rankTag.innerText = "Rango: Maestro Científico";
             rankTag.style.background = "linear-gradient(90deg, #10b981, #00e5ff)";
         } else if (dictamen.puntaje >= 75) {
-            rankTag.innerText = "⚡ Investigador Cuántico";
+            rankTag.innerText = "Rango: Investigador Cuántico";
             rankTag.style.background = "linear-gradient(90deg, #f59e0b, #ec4899)";
         } else {
-            rankTag.innerText = "🌱 Explorador Novato";
+            rankTag.innerText = "Rango: Explorador Novato";
             rankTag.style.background = "linear-gradient(90deg, #3b82f6, #8b5cf6)";
         }
     }
 
-    let htmlPasos = "";
-    dictamen.rubrica.forEach(item => {
-        htmlPasos += `
-            <div class="eval-step-row ${item.aprobado ? 'pass' : 'warn'}">
-                <b>${item.aprobado ? '✔ Logrado' : '⚠️ Atención'} - ${item.paso}:</b>
-                <p style="color:#94a3b8; margin-top:2px;">${item.mensaje}</p>
-            </div>
-        `;
-    });
+    const scoreNum = $("eval-score-num");
+    if (scoreNum) scoreNum.innerText = `${dictamen.puntaje} / 100 PTS`;
+
+    const feedbackText = $("eval-ai-feedback-text");
+    if (feedbackText) feedbackText.innerText = dictamen.mensajeGeneral;
+
+    const breakdown = $("eval-steps-breakdown");
+    if (breakdown) {
+        let htmlPasos = "";
+        (dictamen.rubrica || []).forEach(item => {
+            htmlPasos += `
+                <div class="eval-step-row ${item.aprobado ? 'pass' : 'warn'}" style="background: rgba(255,255,255,0.04); border-left: 4px solid ${item.aprobado ? 'var(--green, #54e6a5)' : 'var(--pink, #ff70b7)'}; padding: 12px 14px; border-radius: 8px; margin-bottom: 10px;">
+                    <b style="color: ${item.aprobado ? 'var(--green, #54e6a5)' : 'var(--pink, #ff70b7)'}">${item.aprobado ? '✔ Logrado' : '⚠️ Atención'} - ${item.paso}:</b>
+                    <p style="color: var(--muted, #a9b8ce); margin-top: 4px; font-size: 14px;">${item.mensaje}</p>
+                </div>
+            `;
+        });
+        breakdown.innerHTML = htmlPasos;
+    }
 
     if (content) {
-        content.innerHTML = `
-            <div class="score-display">${dictamen.puntaje} / 100 PTS</div>
-            <p style="text-align:center; font-size:15px; color:#e2e8f0; margin-bottom:16px;">${dictamen.mensajeGeneral}</p>
-            <div>${htmlPasos}</div>
-        `;
+        content.classList.remove("hidden");
     }
 
     experiments++;
@@ -1959,44 +1969,33 @@ function reiniciarALista() {
 // TALLER DE ENSAMBLAJE DE CIRCUITOS (MODAL)
 // ==========================================
 // TALLER DE ENSAMBLAJE DE CIRCUITOS (CON LÍNEAS PUNTEADAS & DRAG & DROP)
+// EXACTO A IMAGEN 2 (BATERÍA 35V, INTERRUPTOR, RESISTENCIA 10Ω, BOMBILLA)
 // ==========================================
 let circuitoArmado = {
     bateria: false,
+    switch: false,
     resistencia: false,
-    switch: false
+    bombilla: false
 };
 let draggedCircuitComponent = null;
 let selectedCircuitComponent = null;
 
 function abrirConstructorCircuito() {
-    circuitoArmado = { bateria: false, resistencia: false, switch: false };
+    circuitoArmado = { bateria: false, switch: false, resistencia: false, bombilla: false };
     selectedCircuitComponent = null;
     draggedCircuitComponent = null;
 
     const modal = $("modal-builder-circuito");
     if (modal) modal.classList.remove("hidden");
 
-    const board = $("circuitBoard");
+    const board = $("circuitBoardExact") || $("circuitBoard");
     if (board) board.classList.remove("energized");
 
-    // Restablecer slots con líneas punteadas
-    resetSlotDisplay("bateria");
-    resetSlotDisplay("resistencia");
-    resetSlotDisplay("switch");
+    // Restablecer los 4 slots con líneas punteadas
+    ["bateria", "switch", "resistencia", "bombilla"].forEach(resetSlotDisplay);
 
-    // Restablecer componentes en la bandeja
-    resetComponentTray("drag-comp-bateria");
-    resetComponentTray("drag-comp-resistencia");
-    resetComponentTray("drag-comp-switch");
-
-    // Restablecer multímetro digital
-    const meterVal = $("meterCurrentDisplay");
-    const meterState = $("meterStateDisplay");
-    if (meterVal) meterVal.innerText = "0.00 A";
-    if (meterState) meterState.innerText = "CIRCUITO ABIERTO";
-
-    const bulbStatus = $("bulb-status-txt");
-    if (bulbStatus) bulbStatus.innerText = "Instalada";
+    // Restablecer los 4 componentes en la bandeja lateral
+    ["drag-comp-bateria", "drag-comp-switch", "drag-comp-resistencia", "drag-comp-bombilla"].forEach(resetComponentTray);
 
     const successBox = $("circuit-success-box");
     if (successBox) successBox.classList.add("hidden");
@@ -2052,8 +2051,13 @@ function handleCircuitDrop(event, targetTipo) {
     if (tipo === targetTipo) {
         colocarComponenteEnSlot(tipo);
     } else {
-        const nombres = { bateria: "Batería (9V)", resistencia: "Resistencia (10 Ω)", switch: "Interruptor" };
-        alert(`¡Atención! Ese componente (${nombres[tipo] || tipo}) no corresponde a esta ranura. Arrástralo a su recuadro punteado específico.`);
+        const nombres = {
+            bateria: "Batería (35V)",
+            switch: "Interruptor",
+            resistencia: "Resistencia (10 Ω)",
+            bombilla: "Bombilla"
+        };
+        alert(`¡Atención! Ese componente (${nombres[tipo] || tipo}) no corresponde a esta posición. Arrástralo a su recuadro punteado específico en el circuito.`);
     }
 }
 
@@ -2062,12 +2066,12 @@ function seleccionarComponente(tipo) {
     if (circuitoArmado[tipo]) return;
     selectedCircuitComponent = tipo;
 
-    ["bateria", "resistencia", "switch"].forEach(t => {
+    ["bateria", "switch", "resistencia", "bombilla"].forEach(t => {
         const c = $("drag-comp-" + t);
         if (c) c.style.outline = (t === tipo) ? "2px solid var(--cyan)" : "none";
     });
 
-    // En pantallas táctiles o clic directo: si la ranura está vacía, colocar automáticamente
+    // En pantallas táctiles o clic directo: colocar en su ranura
     colocarComponenteEnSlot(tipo);
 }
 
@@ -2096,23 +2100,15 @@ function colocarComponenteEnSlot(tipo) {
 
     selectedCircuitComponent = null;
 
-    // Verificar si todos los componentes están en su lugar
-    if (circuitoArmado.bateria && circuitoArmado.resistencia && circuitoArmado.switch) {
+    // Verificar si los 4 componentes de la Imagen 2 ya están instalados
+    if (circuitoArmado.bateria && circuitoArmado.switch && circuitoArmado.resistencia && circuitoArmado.bombilla) {
         energizarCircuito();
     }
 }
 
 function energizarCircuito() {
-    const board = $("circuitBoard");
+    const board = $("circuitBoardExact") || $("circuitBoard");
     if (board) board.classList.add("energized");
-
-    const meterVal = $("meterCurrentDisplay");
-    const meterState = $("meterStateDisplay");
-    if (meterVal) meterVal.innerText = "0.90 A";
-    if (meterState) meterState.innerText = "ENERGIZADO (LEY DE OHM)";
-
-    const bulbStatus = $("bulb-status-txt");
-    if (bulbStatus) bulbStatus.innerText = "💡 ¡Encendida!";
 
     const successBox = $("circuit-success-box");
     if (successBox) successBox.classList.remove("hidden");
@@ -2121,6 +2117,7 @@ function energizarCircuito() {
 function completarConstruccionCircuito() {
     cerrarConstructorCircuito();
     cambiarPaso(1);
+    addActivity("Taller de ensamblaje: Circuito 35V / 10Ω completado y energizado con éxito.");
 }
 
 // ==========================================
@@ -2523,13 +2520,27 @@ function loadQuestion() {
     const question = questions[currentQuestion];
     if (!question) return;
 
-    $("quizCounter").textContent = `Pregunta ${currentQuestion + 1} de ${questions.length}`;
-    $("quizQuestion").textContent = question.question;
+    const counterEl = $("quizProgress") || $("quizCounter");
+    if (counterEl) {
+        counterEl.textContent = `Pregunta ${currentQuestion + 1} de ${questions.length}`;
+    }
+
+    const scoreEl = $("quizScore");
+    if (scoreEl) {
+        scoreEl.textContent = `Aciertos: ${sessionScore}`;
+    }
+
+    const questionEl = $("quizQuestion");
+    if (questionEl) {
+        questionEl.textContent = question.question;
+    }
 
     const feedback = $("quizFeedback");
-    const nextBtn = $("nextQuestion");
+    const nextBtn = $("nextQuestionBtn") || $("nextQuestion");
+    const restartBtn = $("restartQuizBtn") || $("restartQuiz");
     if (feedback) feedback.classList.add("hidden");
     if (nextBtn) nextBtn.classList.add("hidden");
+    if (restartBtn) restartBtn.classList.add("hidden");
 
     const container = $("quizOptions");
     if (!container) return;
@@ -2557,16 +2568,21 @@ function selectAnswer(index) {
 
     const isCorrect = index === question.answer;
 
+    const feedback = $("quizFeedback");
     if (isCorrect) {
         sessionScore++;
         correctAnswers++;
-        $("quizFeedback").textContent = "¡Correcto! ⭐ " + question.explanation;
+        const scoreEl = $("quizScore");
+        if (scoreEl) scoreEl.textContent = `Aciertos: ${sessionScore}`;
+        if (feedback) feedback.textContent = "¡Correcto! ⭐ " + question.explanation;
     } else {
-        $("quizFeedback").textContent = "Todavía puedes aprender. " + question.explanation;
+        if (feedback) feedback.textContent = "Todavía puedes aprender. " + question.explanation;
     }
 
-    $("quizFeedback").classList.remove("hidden");
-    $("nextQuestion").classList.remove("hidden");
+    if (feedback) feedback.classList.remove("hidden");
+
+    const nextBtn = $("nextQuestionBtn") || $("nextQuestion");
+    if (nextBtn) nextBtn.classList.remove("hidden");
 
     if (buttons[question.answer]) {
         buttons[question.answer].style.borderColor = "#54e6a5";
@@ -2582,41 +2598,57 @@ function selectAnswer(index) {
     );
 }
 
-const nextQuestionBtn = $("nextQuestion");
-if (nextQuestionBtn) {
-    nextQuestionBtn.addEventListener("click", function() {
-        currentQuestion++;
+function nextQuestion() {
+    currentQuestion++;
+    if (currentQuestion >= questions.length) {
+        finishQuiz();
+    } else {
+        loadQuestion();
+    }
+}
+window.nextQuestion = nextQuestion;
 
-        if (currentQuestion >= questions.length) {
-            finishQuiz();
-        } else {
-            loadQuestion();
-        }
-    });
+const nextQuestionBtn = $("nextQuestionBtn") || $("nextQuestion");
+if (nextQuestionBtn) {
+    nextQuestionBtn.addEventListener("click", nextQuestion);
 }
 
 function finishQuiz() {
-    $("quizQuestion").textContent = "¡Evaluación terminada! 🎉";
-    $("quizOptions").innerHTML = "";
+    const questionEl = $("quizQuestion");
+    if (questionEl) questionEl.textContent = "¡Evaluación terminada! 🎉";
+
+    const optionsContainer = $("quizOptions");
+    if (optionsContainer) optionsContainer.innerHTML = "";
 
     const feedback = $("quizFeedback");
-    feedback.classList.remove("hidden");
-    feedback.textContent = `Obtuviste ${sessionScore} respuestas correctas de ${questions.length}.`;
+    if (feedback) {
+        feedback.classList.remove("hidden");
+        feedback.textContent = `Obtuviste ${sessionScore} respuestas correctas de ${questions.length}.`;
+    }
 
-    $("nextQuestion").classList.add("hidden");
-    $("quizCounter").textContent = "Finalizado";
+    const nextBtn = $("nextQuestionBtn") || $("nextQuestion");
+    if (nextBtn) nextBtn.classList.add("hidden");
 
-    $("restartQuiz").textContent = "Volver a intentar";
+    const counterEl = $("quizProgress") || $("quizCounter");
+    if (counterEl) counterEl.textContent = "Finalizado";
+
+    const restartBtn = $("restartQuizBtn") || $("restartQuiz");
+    if (restartBtn) {
+        restartBtn.classList.remove("hidden");
+        restartBtn.textContent = "🔄 Volver a intentar";
+    }
 }
 
 function restartQuiz() {
     currentQuestion = 0;
     sessionScore = 0;
-    $("restartQuiz").textContent = "Reiniciar evaluación";
+    const restartBtn = $("restartQuizBtn") || $("restartQuiz");
+    if (restartBtn) restartBtn.classList.add("hidden");
     loadQuestion();
 }
+window.restartQuiz = restartQuiz;
 
-const restartQuizBtn = $("restartQuiz");
+const restartQuizBtn = $("restartQuizBtn") || $("restartQuiz");
 if (restartQuizBtn) {
     restartQuizBtn.addEventListener("click", restartQuiz);
 }
