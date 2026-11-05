@@ -1,74 +1,78 @@
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
 
-/* ==========================================================================
-   VARIABLES Y TEMAS (DARK / LIGHT)
-   ========================================================================== */
 :root {
-    --bg-dark: #0a0e14;
-    --card-bg: #111822;
-    --card-border: #1e293b;
-    --level-card-bg: #131c28;
-    --level-card-border: #233246;
-    --box-inner-bg: #0d1520;
-    --input-bg: #0a0f16;
-    --neon-blue: #00e5ff;
-    --neon-purple: #a855f7;
-    --neon-green: #10b981;
-    --neon-amber: #f59e0b;
-    --text-main: #f8fafc;
-    --text-muted: #94a3b8;
-    --font: 'Nunito', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    
-    /* Alias de compatibilidad */
-    --background: var(--bg-dark);
-    --panel: var(--card-bg);
-    --panel-light: var(--level-card-bg);
-    --cyan: var(--neon-blue);
-    --purple: var(--neon-purple);
-    --green: var(--neon-green);
-    --border: var(--card-border);
+    --background: #081426;
+    --panel: #101f36;
+    --panel-light: #172a45;
+    --input-bg: #09182b;
+    --cyan: #24d9f2;
+    --cyan-glow: rgba(36, 217, 242, 0.25);
+    --purple: #9b7bff;
+    --pink: #ff70b7;
+    --green: #54e6a5;
+    --amber: #f59e0b;
+    --text: #f3f7ff;
+    --muted: #a9b8ce;
+    --border: rgba(255, 255, 255, 0.09);
+    --card-shadow: 0 10px 35px rgba(0, 0, 0, 0.35);
+    --hero-bg: linear-gradient(115deg, #164b69, #39285f);
+    --primary-btn-bg: linear-gradient(100deg, #21cfe8, #6678ff);
+    --primary-btn-text: #061526;
+    --secondary-btn-bg: #283d5c;
+    --secondary-btn-text: #ffffff;
+    --result-box-bg: #0a1a2c;
+    --result-box-border: rgba(36, 217, 242, 0.25);
+    --result-box-text: #bceef5;
+    --bot-msg-bg: #1a3450;
+    --user-msg-bg: #245b77;
+    --sidebar-bg: #0c1a2e;
+    --badge-bg: rgba(36, 217, 242, 0.13);
+    --badge-text: #24d9f2;
 }
 
-/* PALETA PARA MODO CLARO */
+/* PALETA ADAPTADA PARA MODO CLARO */
 [data-theme="light"] {
-    --bg-dark: #f1f5f9;
-    --card-bg: #ffffff;
-    --card-border: #cbd5e1;
-    --level-card-bg: #f8fafc;
-    --level-card-border: #e2e8f0;
-    --box-inner-bg: #f1f5f9;
+    --background: #f0f4f9;
+    --panel: #ffffff;
+    --panel-light: #f5f8fc;
     --input-bg: #ffffff;
-    --neon-blue: #0284c7;
-    --neon-purple: #7e22ce;
-    --neon-green: #059669;
-    --neon-amber: #d97706;
-    --text-main: #0f172a;
-    --text-muted: #64748b;
-
-    --background: var(--bg-dark);
-    --panel: var(--card-bg);
-    --panel-light: var(--level-card-bg);
-    --cyan: var(--neon-blue);
-    --purple: var(--neon-purple);
-    --green: var(--neon-green);
-    --border: var(--card-border);
+    --cyan: #0284c7;
+    --cyan-glow: rgba(2, 132, 199, 0.2);
+    --purple: #7c3aed;
+    --pink: #db2777;
+    --green: #059669;
+    --amber: #d97706;
+    --text: #0f172a;
+    --muted: #64748b;
+    --border: rgba(0, 0, 0, 0.1);
+    --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+    --hero-bg: linear-gradient(115deg, #0284c7, #6366f1);
+    --primary-btn-bg: linear-gradient(100deg, #0284c7, #4f46e5);
+    --primary-btn-text: #ffffff;
+    --secondary-btn-bg: #e2e8f0;
+    --secondary-btn-text: #1e293b;
+    --result-box-bg: #f0f9ff;
+    --result-box-border: rgba(2, 132, 199, 0.3);
+    --result-box-text: #0369a1;
+    --bot-msg-bg: #e2e8f0;
+    --user-msg-bg: #0284c7;
+    --sidebar-bg: #ffffff;
+    --badge-bg: rgba(2, 132, 199, 0.12);
+    --badge-text: #0284c7;
 }
 
-/* ==========================================================================
-   RESET Y REGLAS GENERALES
-   ========================================================================== */
 * {
-    box-sizing: border-box;
     margin: 0;
     padding: 0;
+    box-sizing: border-box;
 }
 
 body {
-    background-color: var(--bg-dark);
-    color: var(--text-main);
-    font-family: var(--font);
+    background: var(--background);
+    color: var(--text);
+    font-family: 'Nunito', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     min-height: 100vh;
-    transition: background-color 0.3s ease, color 0.3s ease;
+    transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 button, input, select, textarea {
@@ -78,21 +82,26 @@ button, input, select, textarea {
 button {
     cursor: pointer;
     border: none;
-    transition: all 0.2s ease;
+    transition: transform 0.18s ease, filter 0.18s ease, background 0.2s ease, border-color 0.2s ease;
 }
 
 button:hover {
-    transform: translateY(-1px);
-    filter: brightness(1.1);
+    transform: translateY(-2px);
+    filter: brightness(1.08);
 }
 
-.hidden { 
-    display: none !important; 
+button:active {
+    transform: translateY(0);
 }
 
-/* ==========================================================================
-   PANTALLA DE ACCESO (LOGIN)
-   ========================================================================== */
+.hidden {
+    display: none !important;
+}
+
+/* ==========================================
+   LOGIN SCREEN
+   ========================================== */
+
 .login-screen {
     min-height: 100vh;
     display: flex;
@@ -100,42 +109,57 @@ button:hover {
     justify-content: center;
     padding: 20px;
     background:
-        radial-gradient(circle at 15% 20%, rgba(0, 229, 255, 0.15) 0, transparent 35%),
-        radial-gradient(circle at 85% 80%, rgba(168, 85, 247, 0.15) 0, transparent 35%),
-        var(--bg-dark);
+        radial-gradient(circle at 15% 20%, #174b70 0, transparent 40%),
+        radial-gradient(circle at 85% 80%, #43245f 0, transparent 40%),
+        var(--background);
+}
+
+[data-theme="light"] .login-screen {
+    background:
+        radial-gradient(circle at 15% 20%, rgba(2, 132, 199, 0.15) 0, transparent 40%),
+        radial-gradient(circle at 85% 80%, rgba(124, 58, 237, 0.15) 0, transparent 40%),
+        var(--background);
 }
 
 .login-card {
     width: 100%;
-    max-width: 420px;
-    background: var(--card-bg);
-    padding: 40px;
-    border: 1px solid var(--card-border);
-    border-radius: 24px;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+    max-width: 430px;
+    background: var(--panel);
+    padding: 42px 36px;
+    border: 1px solid var(--border);
+    border-radius: 26px;
+    box-shadow: var(--card-shadow);
     text-align: center;
+    transition: background 0.25s ease, border-color 0.25s ease;
 }
 
 .logo {
-    font-size: 50px;
-    margin-bottom: 10px;
-    filter: drop-shadow(0 0 12px var(--neon-blue));
+    font-size: 58px;
+    margin-bottom: 12px;
+    display: inline-block;
+    filter: drop-shadow(0 0 16px var(--cyan-glow));
+    animation: gentlePulse 3s infinite ease-in-out;
+}
+
+@keyframes gentlePulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.06); }
 }
 
 .login-card h1 {
-    font-size: 1.8rem;
+    font-size: 32px;
     font-weight: 900;
+    letter-spacing: -0.5px;
 }
 
 .login-card h1 span {
-    color: var(--neon-blue);
+    color: var(--cyan);
 }
 
 .login-card > p {
-    color: var(--text-muted);
+    color: var(--muted);
     margin: 8px 0 25px;
-    font-size: 0.9rem;
-    line-height: 1.4;
+    font-size: 15px;
 }
 
 .login-card form {
@@ -144,23 +168,1087 @@ button:hover {
 
 label {
     display: block;
-    color: var(--text-muted);
+    color: var(--muted);
     font-weight: 700;
-    margin: 12px 0 6px;
-    font-size: 0.85rem;
+    font-size: 14px;
+    margin: 15px 0 7px;
 }
 
-/* ==========================================================================
-   ESTRUCTURA APP CON SIDEBAR Y CONTENIDO PRINCIPAL
-   ========================================================================== */
+input, select, textarea {
+    width: 100%;
+    padding: 13px 15px;
+    border-radius: 12px;
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+[data-theme="light"] input, 
+[data-theme="light"] select, 
+[data-theme="light"] textarea {
+    border-color: #cbd5e1;
+    color: #0f172a;
+}
+
+input:focus, select:focus, textarea:focus {
+    border-color: var(--cyan);
+    box-shadow: 0 0 0 3px var(--cyan-glow);
+}
+
+.login-card .primary-btn {
+    width: 100%;
+    margin-top: 24px;
+    padding: 14px;
+    font-size: 16px;
+}
+
+.login-card small {
+    display: block;
+    color: var(--muted);
+    margin-top: 22px;
+    font-size: 13px;
+}
+
+/* ==========================================
+   APP MAIN LAYOUT
+   ========================================== */
+
 .app {
     display: flex;
     min-height: 100vh;
 }
 
 .sidebar {
-    width: 250px;
+    width: 260px;
     flex-shrink: 0;
-    background: var(--card-bg);
-    border-right: 1px solid var(--card-border);
-    padding:
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--border);
+    padding: 26px 18px;
+    display: flex;
+    flex-direction: column;
+    transition: background 0.25s ease, border-color 0.25s ease;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 8px 28px;
+}
+
+.brand-icon {
+    font-size: 34px;
+    filter: drop-shadow(0 0 10px var(--cyan-glow));
+}
+
+.brand h2 {
+    font-size: 19px;
+    font-weight: 900;
+    letter-spacing: -0.3px;
+}
+
+.brand small {
+    display: block;
+    color: var(--cyan);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
+
+.sidebar nav {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.nav-btn {
+    color: var(--muted);
+    background: transparent;
+    text-align: left;
+    padding: 12px 14px;
+    border-radius: 12px;
+    font-weight: 800;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    border: 1px solid transparent;
+}
+
+.nav-btn:hover {
+    background: rgba(36, 217, 242, 0.08);
+    color: var(--cyan);
+    transform: translateX(3px);
+}
+
+[data-theme="light"] .nav-btn:hover {
+    background: rgba(2, 132, 199, 0.08);
+    color: var(--cyan);
+}
+
+.nav-btn.active {
+    background: linear-gradient(90deg, rgba(36, 217, 242, 0.18), rgba(155, 123, 255, 0.12));
+    color: var(--cyan);
+    border-color: rgba(36, 217, 242, 0.3);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .nav-btn.active {
+    background: linear-gradient(90deg, rgba(2, 132, 199, 0.15), rgba(124, 58, 237, 0.1));
+    color: var(--cyan);
+    border-color: rgba(2, 132, 199, 0.25);
+}
+
+.sidebar-bottom {
+    margin-top: auto;
+    padding: 20px 8px 0;
+    color: var(--muted);
+    font-size: 13px;
+    text-align: center;
+}
+
+.sidebar-bottom p {
+    font-style: italic;
+    margin-bottom: 12px;
+}
+
+.logout-btn {
+    width: 100%;
+    padding: 11px;
+    border-radius: 11px;
+    background: #3c1d35;
+    color: #ff9ccf;
+    font-weight: 800;
+    font-size: 13px;
+    border: 1px solid rgba(255, 112, 183, 0.2);
+}
+
+[data-theme="light"] .logout-btn {
+    background: #ffe4e6;
+    color: #be123c;
+    border-color: #fecdd3;
+}
+
+.logout-btn:hover {
+    background: #4c2242;
+}
+
+[data-theme="light"] .logout-btn:hover {
+    background: #fecdd3;
+}
+
+/* ==========================================
+   MAIN CONTENT & TOPBAR
+   ========================================== */
+
+.main-content {
+    flex: 1;
+    min-width: 0;
+    padding: 26px 36px;
+    display: flex;
+    flex-direction: column;
+}
+
+.topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 28px;
+}
+
+.topbar h2 {
+    font-size: 24px;
+    font-weight: 900;
+}
+
+.topbar p {
+    color: var(--muted);
+    font-size: 14px;
+    margin-top: 2px;
+}
+
+.topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.theme-toggle-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.theme-toggle-btn:hover {
+    border-color: var(--cyan);
+}
+
+.student-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 9px 16px;
+    border-radius: 14px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.student-info span {
+    font-size: 24px;
+}
+
+.student-info strong {
+    font-weight: 800;
+    font-size: 14px;
+    color: var(--text);
+}
+
+/* ==========================================
+   SECTIONS
+   ========================================== */
+
+.section {
+    display: none;
+    animation: appear 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.active-section {
+    display: block;
+}
+
+@keyframes appear {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ==========================================
+   HERO BANNER
+   ========================================== */
+
+.hero {
+    min-height: 260px;
+    border-radius: 26px;
+    padding: 38px 42px;
+    background: var(--hero-bg);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 25px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: var(--card-shadow);
+}
+
+.hero > div:first-child {
+    max-width: 620px;
+    z-index: 1;
+}
+
+.tag {
+    display: inline-block;
+    background: var(--badge-bg);
+    color: var(--badge-text);
+    border-radius: 30px;
+    padding: 6px 14px;
+    font-size: 11px;
+    letter-spacing: 1.2px;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.hero .tag {
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+}
+
+.hero h1 {
+    font-size: clamp(28px, 4vw, 42px);
+    font-weight: 900;
+    margin: 14px 0 10px;
+    color: #ffffff;
+    line-height: 1.15;
+}
+
+.hero h1 span {
+    color: #55f1ff;
+}
+
+.hero p {
+    color: rgba(255, 255, 255, 0.9);
+    line-height: 1.65;
+    font-size: 15px;
+}
+
+.hero-emoji {
+    font-size: clamp(70px, 9vw, 120px);
+    user-select: none;
+    filter: drop-shadow(0 10px 25px rgba(0, 0, 0, 0.3));
+    animation: floatEmoji 4s ease-in-out infinite;
+}
+
+@keyframes floatEmoji {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+
+/* ==========================================
+   BUTTONS
+   ========================================== */
+
+.primary-btn {
+    background: var(--primary-btn-bg);
+    color: var(--primary-btn-text);
+    padding: 13px 22px;
+    border-radius: 12px;
+    font-weight: 900;
+    font-size: 15px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 4px 18px rgba(36, 217, 242, 0.3);
+}
+
+[data-theme="light"] .primary-btn {
+    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
+}
+
+.secondary-btn {
+    background: var(--secondary-btn-bg);
+    color: var(--secondary-btn-text);
+    padding: 12px 18px;
+    border-radius: 11px;
+    font-weight: 800;
+    font-size: 14px;
+}
+
+/* ==========================================
+   SUBJECT CARDS & GRIDS
+   ========================================== */
+
+.section-heading {
+    margin: 34px 0 18px;
+    font-size: 21px;
+    font-weight: 900;
+}
+
+.subject-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.subject-card, .experiment-card, .progress-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: var(--card-shadow);
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.subject-card:hover {
+    transform: translateY(-3px);
+}
+
+.subject-card {
+    display: flex;
+    flex-direction: column;
+    min-height: 240px;
+}
+
+.subject-card.physics { border-top: 4px solid var(--cyan); }
+.subject-card.chemistry { border-top: 4px solid var(--pink); }
+.subject-card.biology { border-top: 4px solid var(--green); }
+
+.subject-icon {
+    font-size: 38px;
+    margin-bottom: 12px;
+}
+
+.subject-card h3 {
+    font-size: 21px;
+    font-weight: 900;
+    margin-bottom: 8px;
+}
+
+.subject-card p, .experiment-card p {
+    color: var(--muted);
+    line-height: 1.6;
+    font-size: 14px;
+}
+
+.subject-card button, .info-banner button {
+    margin-top: auto;
+    padding-top: 14px;
+    background: var(--panel-light);
+    color: var(--cyan);
+    padding: 11px 16px;
+    border-radius: 11px;
+    font-weight: 800;
+    font-size: 14px;
+    border: 1px solid var(--border);
+    align-self: flex-start;
+}
+
+.info-banner {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    margin-top: 26px;
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    box-shadow: var(--card-shadow);
+}
+
+.info-banner h3 {
+    font-size: 18px;
+    font-weight: 900;
+}
+
+.info-banner p {
+    color: var(--muted);
+    margin-top: 4px;
+    font-size: 14px;
+}
+
+/* ==========================================
+   LABORATORIOS & EXPERIMENTS
+   ========================================== */
+
+.section-intro {
+    margin-bottom: 26px;
+}
+
+.section-intro h1 {
+    font-size: clamp(26px, 3.5vw, 34px);
+    font-weight: 900;
+    margin: 12px 0 6px;
+}
+
+.section-intro p {
+    color: var(--muted);
+    font-size: 15px;
+}
+
+.experiment-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.experiment-card h3 {
+    font-size: 20px;
+    font-weight: 900;
+    margin-bottom: 8px;
+}
+
+.experiment-card .primary-btn {
+    width: 100%;
+    margin-top: 16px;
+}
+
+.result-box {
+    background: var(--result-box-bg);
+    border: 1px solid var(--result-box-border);
+    color: var(--result-box-text);
+    padding: 16px;
+    border-radius: 14px;
+    margin-top: 18px;
+    line-height: 1.6;
+    font-size: 14px;
+}
+
+.wide-card {
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.learning-note {
+    background: rgba(84, 230, 165, 0.1);
+    border: 1px solid rgba(84, 230, 165, 0.25);
+    color: var(--green);
+    border-radius: 14px;
+    padding: 18px;
+    margin-top: 22px;
+    line-height: 1.6;
+    font-size: 14px;
+}
+
+[data-theme="light"] .learning-note {
+    background: #ecfdf5;
+    border-color: #a7f3d0;
+    color: #047857;
+}
+
+/* ==========================================
+   CONSTRUCTOR DE FÓRMULAS DINÁMICAS (FEATURE DEL VIDEO)
+   ========================================== */
+
+.formula-builder-card {
+    border-top: 4px solid var(--cyan);
+    position: relative;
+    overflow: hidden;
+}
+
+.card-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--badge-bg);
+    color: var(--cyan);
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.8px;
+    margin-bottom: 12px;
+}
+
+.formula-inputs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 14px;
+}
+
+.result-badge {
+    background: linear-gradient(90deg, rgba(36, 217, 242, 0.2), rgba(155, 123, 255, 0.2));
+    border: 1px solid var(--cyan);
+    color: var(--cyan);
+    padding: 14px 18px;
+    border-radius: 12px;
+    font-size: 18px;
+    font-weight: 900;
+    margin-top: 18px;
+    text-align: center;
+}
+
+[data-theme="light"] .result-badge {
+    background: #e0f2fe;
+    border-color: #38bdf8;
+    color: #0369a1;
+}
+
+/* ==========================================
+   QUÍMICA & BIOLOGÍA SIMULATORS
+   ========================================== */
+
+.mix-selectors {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.beaker {
+    text-align: center;
+    font-size: 80px;
+    margin: 22px 0 8px;
+    transition: transform 0.3s ease;
+    user-select: none;
+}
+
+.beaker.mixing {
+    animation: mixAnimation 0.8s ease-in-out;
+}
+
+@keyframes mixAnimation {
+    0% { transform: rotate(0deg) scale(1); }
+    25% { transform: rotate(-15deg) scale(1.1); }
+    50% { transform: rotate(15deg) scale(1.1); }
+    75% { transform: rotate(-10deg) scale(1.05); }
+    100% { transform: rotate(0deg) scale(1); }
+}
+
+.safety-note {
+    display: block;
+    color: #f59e0b;
+    font-size: 12px;
+    margin-top: 15px;
+    font-style: italic;
+}
+
+.atom-area {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    margin-top: 18px;
+}
+
+.atom {
+    font-size: 90px;
+    color: var(--purple);
+    animation: spinAtom 20s linear infinite;
+    user-select: none;
+}
+
+@keyframes spinAtom {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.atom-area p {
+    margin: 9px 0;
+    font-size: 15px;
+}
+
+.plant-display {
+    text-align: center;
+    background: rgba(84, 230, 165, 0.08);
+    border: 1px solid rgba(84, 230, 165, 0.2);
+    padding: 24px;
+    margin-top: 16px;
+    border-radius: 16px;
+}
+
+[data-theme="light"] .plant-display {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+}
+
+.plant-display span {
+    display: inline-block;
+    font-size: 85px;
+    transition: transform 0.3s ease;
+    user-select: none;
+}
+
+input[type="range"] {
+    accent-color: var(--green);
+    padding: 0;
+    margin: 14px 0;
+    height: 8px;
+    border-radius: 6px;
+}
+
+.cell-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.cell-part {
+    background: var(--panel-light);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px;
+    text-align: center;
+}
+
+.cell-part span {
+    display: block;
+    font-size: 34px;
+    margin-bottom: 8px;
+}
+
+.cell-part strong {
+    font-size: 15px;
+    font-weight: 800;
+}
+
+.cell-part p {
+    font-size: 13px;
+    margin-top: 5px;
+    color: var(--muted);
+}
+
+/* ==========================================
+   QUIZ & PROGRESO
+   ========================================== */
+
+.quiz-card {
+    max-width: 760px;
+}
+
+.quiz-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--cyan);
+    font-weight: 900;
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+.quiz-card h2 {
+    font-size: 22px;
+    font-weight: 900;
+    margin-bottom: 20px;
+    line-height: 1.35;
+}
+
+.quiz-options {
+    display: grid;
+    gap: 12px;
+}
+
+.quiz-option {
+    text-align: left;
+    padding: 15px 18px;
+    background: var(--panel-light);
+    border: 1px solid var(--border);
+    border-radius: 13px;
+    color: var(--text);
+    font-weight: 700;
+    font-size: 15px;
+    transition: all 0.18s ease;
+}
+
+.quiz-option:hover:not(:disabled) {
+    border-color: var(--cyan);
+    background: rgba(36, 217, 242, 0.08);
+}
+
+[data-theme="light"] .quiz-option:hover:not(:disabled) {
+    background: rgba(2, 132, 199, 0.08);
+}
+
+.quiz-option:disabled {
+    cursor: default;
+    opacity: 0.9;
+}
+
+.progress-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    margin-bottom: 20px;
+}
+
+.progress-card {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.progress-card span {
+    font-size: 38px;
+}
+
+.progress-card h2 {
+    font-size: 34px;
+    font-weight: 900;
+    color: var(--cyan);
+    line-height: 1;
+}
+
+.progress-card p {
+    color: var(--muted);
+    font-size: 14px;
+    margin-top: 4px;
+}
+
+.history-item {
+    padding: 12px 14px;
+    background: var(--panel-light);
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    margin-bottom: 9px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.history-item strong {
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.history-item small {
+    color: var(--muted);
+    font-size: 12px;
+    flex-shrink: 0;
+}
+
+/* ==========================================
+   CHAT / NEXOR-IA
+   ========================================== */
+
+.chat-card {
+    max-width: 860px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    overflow: hidden;
+    box-shadow: var(--card-shadow);
+}
+
+.chat-header {
+    background: var(--panel-light);
+    border-bottom: 1px solid var(--border);
+    padding: 18px 22px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.robot-icon {
+    font-size: 38px;
+    filter: drop-shadow(0 0 10px var(--cyan-glow));
+}
+
+.chat-header strong {
+    font-size: 17px;
+    font-weight: 900;
+}
+
+.chat-header small {
+    display: block;
+    color: var(--muted);
+    font-size: 12px;
+    margin-top: 2px;
+}
+
+.online-dot {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: var(--green);
+    margin-left: auto;
+    box-shadow: 0 0 10px var(--green);
+}
+
+.chat-messages {
+    height: 380px;
+    overflow-y: auto;
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.message {
+    max-width: 82%;
+    padding: 14px 18px;
+    border-radius: 16px;
+    line-height: 1.6;
+    font-size: 14.5px;
+    animation: msgIn 0.2s ease-out;
+}
+
+@keyframes msgIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.bot-message {
+    background: var(--bot-msg-bg);
+    color: var(--text);
+    border-bottom-left-radius: 4px;
+    align-self: flex-start;
+}
+
+[data-theme="light"] .bot-message {
+    color: #1e293b;
+}
+
+.user-message {
+    background: var(--user-msg-bg);
+    color: #ffffff;
+    border-bottom-right-radius: 4px;
+    align-self: flex-end;
+}
+
+.chat-form {
+    display: flex;
+    gap: 12px;
+    padding: 16px 20px;
+    border-top: 1px solid var(--border);
+    background: var(--panel);
+}
+
+.chat-form input {
+    flex: 1;
+}
+
+.chat-form button {
+    background: var(--cyan);
+    color: #071526;
+    padding: 0 22px;
+    border-radius: 12px;
+    font-weight: 900;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+[data-theme="light"] .chat-form button {
+    background: #0284c7;
+    color: #ffffff;
+}
+
+.demo-note {
+    padding: 0 20px 16px;
+    color: var(--muted);
+    font-size: 12px;
+    display: block;
+}
+
+footer {
+    color: var(--muted);
+    text-align: center;
+    padding: 35px 0 15px;
+    font-size: 13px;
+    margin-top: auto;
+}
+
+/* ==========================================
+   RESPONSIVE DESIGN (MOBILE & TABLET)
+   ========================================== */
+
+@media (max-width: 1024px) {
+    .sidebar {
+        width: 220px;
+        padding: 20px 12px;
+    }
+
+    .main-content {
+        padding: 22px;
+    }
+
+    .subject-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .app {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        padding: 14px 14px 6px;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .brand {
+        padding: 4px 6px 12px;
+    }
+
+    .sidebar nav {
+        flex-direction: row;
+        overflow-x: auto;
+        padding-bottom: 8px;
+        -webkit-overflow-scrolling: touch;
+        gap: 6px;
+    }
+
+    .nav-btn {
+        flex-shrink: 0;
+        font-size: 12.5px;
+        padding: 9px 12px;
+        white-space: nowrap;
+    }
+
+    .sidebar-bottom {
+        display: none;
+    }
+
+    .main-content {
+        padding: 16px 14px;
+    }
+
+    .topbar {
+        align-items: flex-start;
+        margin-bottom: 20px;
+    }
+
+    .topbar h2 {
+        font-size: 20px;
+    }
+
+    .student-info {
+        font-size: 12px;
+        padding: 7px 12px;
+    }
+
+    .student-info span {
+        font-size: 18px;
+    }
+
+    .hero {
+        padding: 24px 20px;
+        border-radius: 20px;
+    }
+
+    .hero h1 {
+        font-size: 26px;
+    }
+
+    .hero-emoji {
+        font-size: 55px;
+    }
+
+    .subject-grid, .experiment-grid, .progress-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .mix-selectors {
+        grid-template-columns: 1fr;
+    }
+
+    .cell-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .info-banner {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .atom-area {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+}
+
+@media (max-width: 440px) {
+    .hero-emoji {
+        display: none;
+    }
+
+    .login-card {
+        padding: 28px 20px;
+        border-radius: 20px;
+    }
+
+    .chat-messages {
+        height: 320px;
+        padding: 14px;
+    }
+
+    .message {
+        max-width: 90%;
+        font-size: 13.5px;
+    }
+
+    .chat-form button {
+        padding: 0 14px;
+    }
+}
