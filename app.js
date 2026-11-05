@@ -778,13 +778,41 @@ function escapeHTML(value) {
 // ==========================================
 // INICIO Y CIERRE DE SESIÓN
 // ==========================================
+// FLUJO DE INICIO DE SESIÓN Y SELECCIÓN DE NIVEL
+// ==========================================
+let materiaOrigen = "fisica";
+
 function enterApp(name) {
     student = name;
     localStorage.setItem("nexoraStudent", student);
 
     const loginScreen = $("loginScreen");
-    const appScreen = $("app");
+    const levelScreen = $("levelScreen");
+    const levelStudentName = $("levelStudentName");
+    if (levelStudentName) levelStudentName.textContent = student;
+
+    // Mostrar pantalla de selección de nivel escolar inmediatamente después del login
     if (loginScreen) loginScreen.classList.add("hidden");
+    if (levelScreen) levelScreen.classList.remove("hidden");
+}
+
+function regresarAlLogin() {
+    const levelScreen = $("levelScreen");
+    const loginScreen = $("loginScreen");
+    const appScreen = $("app");
+
+    if (levelScreen) levelScreen.classList.add("hidden");
+    if (appScreen) appScreen.classList.add("hidden");
+    if (loginScreen) loginScreen.classList.remove("hidden");
+}
+
+function elegirNivelPrincipal(nivel) {
+    nivelActual = nivel;
+    localStorage.setItem("nexoraLevel", nivelActual);
+
+    const levelScreen = $("levelScreen");
+    const appScreen = $("app");
+    if (levelScreen) levelScreen.classList.add("hidden");
     if (appScreen) appScreen.classList.remove("hidden");
 
     const welcomeName = $("welcomeName");
@@ -792,7 +820,18 @@ function enterApp(name) {
     if (welcomeName) welcomeName.textContent = student;
     if (heroName) heroName.textContent = student;
 
+    renderizarMisionesEnMaterias();
     updateProgress();
+}
+
+function abrirCambioNivel() {
+    const levelScreen = $("levelScreen");
+    const appScreen = $("app");
+    const levelStudentName = $("levelStudentName");
+    if (levelStudentName) levelStudentName.textContent = student || "Estudiante";
+
+    if (appScreen) appScreen.classList.add("hidden");
+    if (levelScreen) levelScreen.classList.remove("hidden");
 }
 
 const loginForm = $("loginForm");
@@ -818,11 +857,14 @@ const logoutBtn = $("logoutBtn");
 if (logoutBtn) {
     logoutBtn.addEventListener("click", function() {
         localStorage.removeItem("nexoraStudent");
+        localStorage.removeItem("nexoraLevel");
         student = "";
 
         const appScreen = $("app");
+        const levelScreen = $("levelScreen");
         const loginScreen = $("loginScreen");
         if (appScreen) appScreen.classList.add("hidden");
+        if (levelScreen) levelScreen.classList.add("hidden");
         if (loginScreen) loginScreen.classList.remove("hidden");
         if (loginForm) loginForm.reset();
     });
@@ -853,21 +895,21 @@ function showSection(sectionId) {
         fisica: "Laboratorio de Física",
         quimica: "Laboratorio de Química",
         biologia: "Laboratorio de Biología",
-        misiones: "Misiones Científicas (18 Experimentos)",
         evaluacion: "Evaluaciones",
         progreso: "Mi progreso",
-        ia: "Asistente NEXOR-IA"
+        ia: "Asistente NEXOR-IA",
+        "laboratorio-activo": "Método Científico en 7 Pasos"
     };
 
     const subtitles = {
         inicio: "Explora, experimenta y descubre.",
-        fisica: "Modifica los valores y observa cómo cambian los resultados.",
-        quimica: "Explora mezclas virtuales y descubre sus propiedades.",
-        biologia: "Descubre cómo funcionan los seres vivos.",
-        misiones: "Desarrolla el método científico paso a paso con simuladores en tiempo real.",
+        fisica: "Misiones del método científico, constructor de 5 fórmulas y simuladores de movimiento.",
+        quimica: "Misiones científicas, simulador conceptual de mezclas y modelo del átomo.",
+        biologia: "Misiones biológicas, fotosíntesis interactiva y partes de la célula.",
         evaluacion: "Responde las preguntas y comprueba lo que has aprendido.",
-        progreso: "Consulta las actividades que has realizado en este navegador.",
-        ia: "Tu compañero para explorar el mundo de la ciencia."
+        progreso: "Consulta las actividades y evaluaciones realizadas en este navegador.",
+        ia: "Tu compañero con Inteligencia Artificial para responder dudas científicas.",
+        "laboratorio-activo": "Experimenta con simuladores interactivos, registra mediciones y evalúa tu hipótesis."
     };
 
     const pageTitle = $("pageTitle");
@@ -876,8 +918,8 @@ function showSection(sectionId) {
     if (pageSubtitle) pageSubtitle.textContent = subtitles[sectionId] || "Explora, experimenta y descubre.";
 
     if (sectionId === "progreso") updateProgress();
-    if (sectionId === "misiones") {
-        volverMenuNiveles();
+    if (sectionId === "fisica" || sectionId === "quimica" || sectionId === "biologia") {
+        renderizarMisionesEnMaterias();
     }
 
     const mainContent = document.querySelector(".main-content");
@@ -891,64 +933,64 @@ document.querySelectorAll(".nav-btn").forEach(button => {
 });
 
 // ==========================================
-// MOTOR DE 18 EXPERIMENTOS GAMER SCIENCE
-// (NIVELES SECUNDARIA / PREPA & 7 PASOS)
+// RENDERIZADO DE LAS 18 MISIONES EN SUS MATERIAS
 // ==========================================
-function seleccionarNivel(nivel) {
-    nivelActual = nivel;
-    const menuNiveles = $("menu-niveles");
-    const menuMaterias = $("menu-materias");
-    const tituloNivel = $("titulo-nivel");
+function renderizarMisionesEnMaterias() {
+    document.querySelectorAll(".txt-nivel-actual").forEach(el => {
+        el.innerText = nivelActual;
+    });
 
-    if (menuNiveles) menuNiveles.classList.add("hidden");
-    if (tituloNivel) tituloNivel.innerText = `Misiones para ${nivel}`;
-    if (menuMaterias) menuMaterias.classList.remove("hidden");
+    const lblTopbar = $("lblNivelTopbar");
+    if (lblTopbar) lblTopbar.innerText = nivelActual;
 
-    filtrarMateria("Fisica");
+    const opuesto = (nivelActual === "Secundaria") ? "Preparatoria" : "Secundaria";
+    const btnFis = $("btn-toggle-nivel-fisica");
+    const btnQui = $("btn-toggle-nivel-quimica");
+    const btnBio = $("btn-toggle-nivel-biologia");
+    if (btnFis) btnFis.innerText = opuesto;
+    if (btnQui) btnQui.innerText = opuesto;
+    if (btnBio) btnBio.innerText = opuesto;
+
+    renderizarListaMisiones("Fisica", $("lista-misiones-fisica"));
+    renderizarListaMisiones("Quimica", $("lista-misiones-quimica"));
+    renderizarListaMisiones("Biologia", $("lista-misiones-biologia"));
 }
 
-function volverMenuNiveles() {
-    const menuMaterias = $("menu-materias");
-    const menuNiveles = $("menu-niveles");
-    const vistaLab = $("vista-laboratorio");
-    const vistaEval = $("vista-evaluacion");
+function renderizarListaMisiones(materia, contenedor) {
+    if (!contenedor) return;
+    contenedor.innerHTML = "";
 
-    if (vistaLab) vistaLab.classList.add("hidden");
-    if (vistaEval) vistaEval.classList.add("hidden");
-    if (menuMaterias) menuMaterias.classList.add("hidden");
-    if (menuNiveles) menuNiveles.classList.remove("hidden");
-}
-
-function filtrarMateria(materia) {
-    materiaActual = materia;
-    document.querySelectorAll(".subject-btn").forEach(btn => btn.classList.remove("active"));
-    const btnActivo = $("btn-mat-" + materia);
-    if (btnActivo) btnActivo.classList.add("active");
-
-    const lista = $("lista-temas");
-    if (!lista) return;
-    lista.innerHTML = "";
-
-    const experimentos = (dbExperimentos[nivelActual] && dbExperimentos[nivelActual][materia]) || [];
-    experimentos.forEach(exp => {
+    const misiones = (dbExperimentos[nivelActual] && dbExperimentos[nivelActual][materia]) || [];
+    misiones.forEach(exp => {
         const item = document.createElement("div");
         item.className = "exp-item";
-        item.innerHTML = `<h4>${exp.titulo}</h4><p>${exp.desc}</p>`;
-        item.onclick = () => iniciarMisionLaboratorio(exp);
-        lista.appendChild(item);
-    });
-}
 
-function volverAMaterias() {
-    detenerCanvasAnim();
-    const vistaLab = $("vista-laboratorio");
-    const menuMaterias = $("menu-materias");
-    if (vistaLab) vistaLab.classList.add("hidden");
-    if (menuMaterias) menuMaterias.classList.remove("hidden");
+        const badgeDiff = (exp.simTipo === "circuito" || exp.simTipo === "tiro" || exp.simTipo === "genetica") ? "alta" : "media";
+        const diffText = badgeDiff === "alta" ? "Avanzado" : "Intermedio";
+
+        item.innerHTML = `
+            <div class="exp-item-content">
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:5px;">
+                    <span class="badge-dificultad ${badgeDiff}">${diffText}</span>
+                    <h4 style="margin:0; font-size:16px;">${exp.titulo}</h4>
+                </div>
+                <p style="margin:0; font-size:13.5px; color:var(--muted);">${exp.desc}</p>
+            </div>
+            <button class="primary-btn" style="padding:9px 16px; font-size:13px; white-space:nowrap;">
+                Iniciar Misión 🚀
+            </button>
+        `;
+        item.onclick = () => {
+            materiaActual = materia;
+            iniciarMisionLaboratorio(exp);
+        };
+        contenedor.appendChild(item);
+    });
 }
 
 function iniciarMisionLaboratorio(exp) {
     expActual = exp;
+    materiaOrigen = materiaActual.toLowerCase();
     userSession = {
         observacionSeleccionada: "",
         observacionLibre: "",
@@ -967,6 +1009,12 @@ function iniciarMisionLaboratorio(exp) {
     if (labTitulo) labTitulo.innerText = exp.titulo;
     if (labTag) labTag.innerText = materiaActual.toUpperCase();
 
+    const btnReopen = $("btn-reopen-circuit-box");
+    if (btnReopen) {
+        if (exp.simTipo === "circuito") btnReopen.classList.remove("hidden");
+        else btnReopen.classList.add("hidden");
+    }
+
     poblarOpcionesPaso1(exp);
     poblarOpcionesPaso2(exp);
     poblarConstructorPaso3(exp);
@@ -975,10 +1023,11 @@ function iniciarMisionLaboratorio(exp) {
     poblarOpcionesPaso6(exp);
     poblarOpcionesPaso7(exp);
 
-    const menuMaterias = $("menu-materias");
+    showSection("laboratorio-activo");
     const vistaLab = $("vista-laboratorio");
-    if (menuMaterias) menuMaterias.classList.add("hidden");
+    const vistaEval = $("vista-evaluacion");
     if (vistaLab) vistaLab.classList.remove("hidden");
+    if (vistaEval) vistaEval.classList.add("hidden");
 
     if (exp.simTipo === "circuito") {
         abrirConstructorCircuito();
@@ -987,6 +1036,22 @@ function iniciarMisionLaboratorio(exp) {
     }
 
     detectarSensores();
+}
+
+function salirDelLaboratorio() {
+    detenerCanvasAnim();
+    const vistaLab = $("vista-laboratorio");
+    const vistaEval = $("vista-evaluacion");
+    if (vistaLab) vistaLab.classList.add("hidden");
+    if (vistaEval) vistaEval.classList.add("hidden");
+
+    showSection(materiaOrigen || "fisica");
+}
+
+function reiniciarMisionActual() {
+    if (expActual) {
+        iniciarMisionLaboratorio(expActual);
+    }
 }
 
 function cambiarPaso(paso) {
@@ -1893,64 +1958,168 @@ function reiniciarALista() {
 // ==========================================
 // TALLER DE ENSAMBLAJE DE CIRCUITOS (MODAL)
 // ==========================================
+// TALLER DE ENSAMBLAJE DE CIRCUITOS (CON LÍNEAS PUNTEADAS & DRAG & DROP)
+// ==========================================
+let circuitoArmado = {
+    bateria: false,
+    resistencia: false,
+    switch: false
+};
+let draggedCircuitComponent = null;
+let selectedCircuitComponent = null;
+
 function abrirConstructorCircuito() {
-    circuitoEstado = { bateria: false, cable: false, foco: false };
+    circuitoArmado = { bateria: false, resistencia: false, switch: false };
+    selectedCircuitComponent = null;
+    draggedCircuitComponent = null;
+
     const modal = $("modal-builder-circuito");
     if (modal) modal.classList.remove("hidden");
 
-    const stepTag = $("builder-step-tag");
-    const inst = $("builder-instruction");
-    const btnBat = $("btn-comp-bateria");
-    const btnCab = $("btn-comp-cable");
-    const btnFoc = $("btn-comp-foco");
-    const btnFin = $("btn-finish-circuit");
-    const preview = $("builder-preview");
+    const board = $("circuitBoard");
+    if (board) board.classList.remove("energized");
 
-    if (stepTag) stepTag.innerText = "Paso 1 de 3";
-    if (inst) inst.innerText = "1. Haz clic en la Batería para energizar el circuito:";
-    if (btnBat) btnBat.classList.remove("hidden");
-    if (btnCab) btnCab.classList.add("hidden");
-    if (btnFoc) btnFoc.classList.add("hidden");
-    if (btnFin) btnFin.classList.add("hidden");
-    if (preview) preview.innerHTML = "<i>Tablero de pruebas listo...</i>";
+    // Restablecer slots con líneas punteadas
+    resetSlotDisplay("bateria");
+    resetSlotDisplay("resistencia");
+    resetSlotDisplay("switch");
+
+    // Restablecer componentes en la bandeja
+    resetComponentTray("drag-comp-bateria");
+    resetComponentTray("drag-comp-resistencia");
+    resetComponentTray("drag-comp-switch");
+
+    // Restablecer multímetro digital
+    const meterVal = $("meterCurrentDisplay");
+    const meterState = $("meterStateDisplay");
+    if (meterVal) meterVal.innerText = "0.00 A";
+    if (meterState) meterState.innerText = "CIRCUITO ABIERTO";
+
+    const bulbStatus = $("bulb-status-txt");
+    if (bulbStatus) bulbStatus.innerText = "Instalada";
+
+    const successBox = $("circuit-success-box");
+    if (successBox) successBox.classList.add("hidden");
 }
 
-function agregarComponenteCircuito(tipo) {
-    const preview = $("builder-preview");
-    const stepTag = $("builder-step-tag");
-    const inst = $("builder-instruction");
-    const btnBat = $("btn-comp-bateria");
-    const btnCab = $("btn-comp-cable");
-    const btnFoc = $("btn-comp-foco");
-    const btnFin = $("btn-finish-circuit");
+function resetSlotDisplay(tipo) {
+    const outline = $("outline-" + tipo);
+    const placed = $("placed-" + tipo);
+    if (outline) outline.classList.remove("hidden");
+    if (placed) placed.classList.add("hidden");
+}
 
-    if (tipo === 'bateria') {
-        circuitoEstado.bateria = true;
-        if (preview) preview.innerHTML = "🔋 <b>Batería de 9V colocada.</b> Falta conectar los conductores.";
-        if (btnBat) btnBat.classList.add("hidden");
-        if (btnCab) btnCab.classList.remove("hidden");
-        if (stepTag) stepTag.innerText = "Paso 2 de 3";
-        if (inst) inst.innerText = "2. Conecta los cables conductores alrededor del circuito:";
-    } else if (tipo === 'cable') {
-        circuitoEstado.cable = true;
-        if (preview) preview.innerHTML = "🔋 Batería + ⚡ <b>Cables conectados.</b> Falta instalar el receptor de luz.";
-        if (btnCab) btnCab.classList.add("hidden");
-        if (btnFoc) btnFoc.classList.remove("hidden");
-        if (stepTag) stepTag.innerText = "Paso 3 de 3";
-        if (inst) inst.innerText = "3. Instala la bombilla / foco para cerrar el circuito:";
-    } else if (tipo === 'foco') {
-        circuitoEstado.foco = true;
-        if (preview) preview.innerHTML = "✅ <b>¡Circuito Completo!</b> 🔋 Batería + ⚡ Cables + 💡 Foco instalado.";
-        if (btnFoc) btnFoc.classList.add("hidden");
-        if (stepTag) stepTag.innerText = "Completado";
-        if (inst) inst.innerText = "¡Excelente trabajo! Todo está listo para la fase de observación.";
-        if (btnFin) btnFin.classList.remove("hidden");
+function resetComponentTray(id) {
+    const comp = $(id);
+    if (comp) {
+        comp.classList.remove("used");
+        comp.style.outline = "none";
     }
 }
 
-function completarConstruccionCircuito() {
+function cerrarConstructorCircuito() {
     const modal = $("modal-builder-circuito");
     if (modal) modal.classList.add("hidden");
+}
+
+// Drag & Drop nativo de HTML5
+function handleCircuitDragStart(event, tipo) {
+    draggedCircuitComponent = tipo;
+    if (event.dataTransfer) {
+        event.dataTransfer.setData("text/plain", tipo);
+        event.dataTransfer.effectAllowed = "move";
+    }
+}
+
+function handleCircuitDragOver(event) {
+    event.preventDefault();
+    if (event.dataTransfer) {
+        event.dataTransfer.dropEffect = "move";
+    }
+    event.currentTarget.classList.add("drag-over");
+}
+
+function handleCircuitDragLeave(event) {
+    event.currentTarget.classList.remove("drag-over");
+}
+
+function handleCircuitDrop(event, targetTipo) {
+    event.preventDefault();
+    event.currentTarget.classList.remove("drag-over");
+    const tipo = (event.dataTransfer ? event.dataTransfer.getData("text/plain") : null) || draggedCircuitComponent;
+    if (!tipo) return;
+
+    if (tipo === targetTipo) {
+        colocarComponenteEnSlot(tipo);
+    } else {
+        const nombres = { bateria: "Batería (9V)", resistencia: "Resistencia (10 Ω)", switch: "Interruptor" };
+        alert(`¡Atención! Ese componente (${nombres[tipo] || tipo}) no corresponde a esta ranura. Arrástralo a su recuadro punteado específico.`);
+    }
+}
+
+// Soporte táctil / clic para móviles y accesibilidad
+function seleccionarComponente(tipo) {
+    if (circuitoArmado[tipo]) return;
+    selectedCircuitComponent = tipo;
+
+    ["bateria", "resistencia", "switch"].forEach(t => {
+        const c = $("drag-comp-" + t);
+        if (c) c.style.outline = (t === tipo) ? "2px solid var(--cyan)" : "none";
+    });
+
+    // En pantallas táctiles o clic directo: si la ranura está vacía, colocar automáticamente
+    colocarComponenteEnSlot(tipo);
+}
+
+function handleSlotClick(slotTipo) {
+    if (selectedCircuitComponent === slotTipo) {
+        colocarComponenteEnSlot(slotTipo);
+    } else if (!circuitoArmado[slotTipo]) {
+        colocarComponenteEnSlot(slotTipo);
+    }
+}
+
+function colocarComponenteEnSlot(tipo) {
+    if (circuitoArmado[tipo]) return;
+    circuitoArmado[tipo] = true;
+
+    const outline = $("outline-" + tipo);
+    const placed = $("placed-" + tipo);
+    if (outline) outline.classList.add("hidden");
+    if (placed) placed.classList.remove("hidden");
+
+    const compTray = $("drag-comp-" + tipo);
+    if (compTray) {
+        compTray.classList.add("used");
+        compTray.style.outline = "none";
+    }
+
+    selectedCircuitComponent = null;
+
+    // Verificar si todos los componentes están en su lugar
+    if (circuitoArmado.bateria && circuitoArmado.resistencia && circuitoArmado.switch) {
+        energizarCircuito();
+    }
+}
+
+function energizarCircuito() {
+    const board = $("circuitBoard");
+    if (board) board.classList.add("energized");
+
+    const meterVal = $("meterCurrentDisplay");
+    const meterState = $("meterStateDisplay");
+    if (meterVal) meterVal.innerText = "0.90 A";
+    if (meterState) meterState.innerText = "ENERGIZADO (LEY DE OHM)";
+
+    const bulbStatus = $("bulb-status-txt");
+    if (bulbStatus) bulbStatus.innerText = "💡 ¡Encendida!";
+
+    const successBox = $("circuit-success-box");
+    if (successBox) successBox.classList.remove("hidden");
+}
+
+function completarConstruccionCircuito() {
+    cerrarConstructorCircuito();
     cambiarPaso(1);
 }
 
@@ -2555,7 +2724,20 @@ window.addEventListener("DOMContentLoaded", () => {
 
     loadQuestion();
 
+    const savedLevel = localStorage.getItem("nexoraLevel");
+    if (savedLevel) {
+        nivelActual = savedLevel;
+    }
+
     if (student) {
-        enterApp(student);
+        const studentInput = $("studentName");
+        if (studentInput) studentInput.value = student;
+        if (savedLevel) {
+            elegirNivelPrincipal(savedLevel);
+        } else {
+            enterApp(student);
+        }
+    } else {
+        renderizarMisionesEnMaterias();
     }
 });

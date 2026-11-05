@@ -1832,3 +1832,448 @@ canvas {
     flex: 0.45;
 }
 
+/* ==========================================
+   TALLER DE CIRCUITOS CON LÍNEAS PUNTEADAS
+   ========================================== */
+.circuit-modal-box {
+    max-width: 680px !important;
+    width: 95% !important;
+    max-height: 92vh;
+    overflow-y: auto;
+}
+
+.circuit-specs-panel {
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin: 14px 0 16px;
+}
+
+.circuit-instructions-row {
+    font-size: 0.85rem;
+    line-height: 1.45;
+    color: var(--text);
+    margin-bottom: 10px;
+}
+
+.circuit-instructions-row strong {
+    color: var(--cyan);
+}
+
+.circuit-specs-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.spec-pill {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 8px 10px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.spec-pill small {
+    display: block;
+    font-size: 0.65rem;
+    color: var(--muted);
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+}
+
+.spec-pill strong {
+    font-size: 0.85rem;
+    color: var(--cyan);
+    font-family: monospace, sans-serif;
+}
+
+/* TABLERO ESQUEMÁTICO */
+.circuit-board {
+    position: relative;
+    background: #040914;
+    border: 2px solid var(--border);
+    border-radius: 16px;
+    height: 310px;
+    margin: 16px 0;
+    overflow: hidden;
+    box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.6);
+}
+
+[data-theme="light"] .circuit-board {
+    background: #091322;
+}
+
+/* CABLES CON LÍNEAS PUNTEADAS */
+.circuit-wire {
+    position: absolute;
+    border-style: dashed;
+    border-color: rgba(36, 217, 242, 0.45);
+    transition: all 0.35s ease;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.wire-top {
+    top: 50px;
+    left: 100px;
+    right: 100px;
+    border-top-width: 4px;
+}
+
+.wire-right {
+    top: 50px;
+    bottom: 50px;
+    right: 100px;
+    border-right-width: 4px;
+}
+
+.wire-bottom {
+    bottom: 50px;
+    left: 100px;
+    right: 100px;
+    border-bottom-width: 4px;
+}
+
+.wire-left {
+    top: 50px;
+    bottom: 50px;
+    left: 100px;
+    border-left-width: 4px;
+}
+
+/* Cables energizados (cuando el circuito está cerrado) */
+.circuit-board.energized .circuit-wire {
+    border-style: solid;
+    border-color: #24d9f2;
+    box-shadow: 0 0 16px rgba(36, 217, 242, 0.8);
+    animation: wirePulse 1.5s infinite ease-in-out;
+}
+
+@keyframes wirePulse {
+    0%, 100% { filter: drop-shadow(0 0 4px #24d9f2); }
+    50% { filter: drop-shadow(0 0 12px #24d9f2); }
+}
+
+/* RANURAS (DROP ZONES) */
+.circuit-slot {
+    position: absolute;
+    z-index: 2;
+    background: rgba(16, 31, 54, 0.95);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.circuit-slot:hover {
+    transform: scale(1.03);
+}
+
+.circuit-slot.drag-over {
+    transform: scale(1.06);
+    box-shadow: 0 0 25px var(--cyan);
+}
+
+.slot-bateria {
+    top: 50%;
+    left: 30px;
+    transform: translateY(-50%);
+    width: 140px;
+    min-height: 100px;
+}
+
+.slot-resistencia {
+    top: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 170px;
+    min-height: 80px;
+}
+
+.slot-switch {
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 160px;
+    min-height: 80px;
+}
+
+.slot-badge {
+    position: absolute;
+    top: -9px;
+    left: 10px;
+    font-size: 0.65rem;
+    font-weight: 800;
+    background: var(--cyan);
+    color: #061526;
+    padding: 1px 7px;
+    border-radius: 10px;
+    letter-spacing: 0.5px;
+}
+
+.slot-dashed-outline {
+    border: 2px dashed rgba(36, 217, 242, 0.5);
+    border-radius: 10px;
+    padding: 10px 8px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 75px;
+    background: rgba(4, 15, 30, 0.6);
+}
+
+.slot-icon {
+    font-size: 24px;
+    opacity: 0.6;
+    margin-bottom: 2px;
+}
+
+.slot-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--cyan);
+}
+
+.slot-sub {
+    font-size: 0.65rem;
+    color: var(--muted);
+}
+
+.slot-placed-item {
+    border: 2px solid var(--green);
+    background: rgba(16, 45, 35, 0.85);
+    border-radius: 10px;
+    padding: 10px 8px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    animation: placeIn 0.25s ease-out;
+}
+
+@keyframes placeIn {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.status-badge-ok {
+    font-size: 0.68rem;
+    color: var(--green);
+    font-weight: 800;
+    margin-top: 3px;
+}
+
+/* BOMBILLA ILUMINADA */
+.circuit-board.energized #bulb-icon {
+    filter: drop-shadow(0 0 20px #ffd700) drop-shadow(0 0 40px #ff9900);
+    animation: bulbGlow 1s infinite alternate;
+}
+
+@keyframes bulbGlow {
+    from { transform: scale(1); filter: drop-shadow(0 0 15px #ffd700); }
+    to { transform: scale(1.1); filter: drop-shadow(0 0 28px #ffea00); }
+}
+
+/* MULTÍMETRO DIGITAL */
+.digital-multimeter {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #0f1926;
+    border: 2px solid #283e58;
+    border-radius: 10px;
+    padding: 10px 14px;
+    z-index: 3;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    width: 140px;
+    text-align: center;
+}
+
+.meter-screen {
+    background: #06111e;
+    border: 1px solid #1a324a;
+    border-radius: 6px;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+}
+
+.meter-label {
+    font-size: 0.6rem;
+    color: var(--muted);
+    font-weight: 800;
+    letter-spacing: 0.5px;
+}
+
+.meter-value {
+    font-size: 1.25rem;
+    font-weight: 900;
+    font-family: monospace, monospace;
+    color: #ef4444;
+    margin: 3px 0;
+}
+
+.circuit-board.energized .meter-value {
+    color: #10b981;
+    text-shadow: 0 0 8px rgba(16, 185, 129, 0.8);
+}
+
+.meter-state {
+    font-size: 0.62rem;
+    font-weight: 800;
+    color: var(--muted);
+}
+
+.circuit-board.energized .meter-state {
+    color: #10b981;
+}
+
+/* BANDEJA DE COMPONENTES */
+.components-tray-container {
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px;
+}
+
+.tray-title {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--muted);
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.components-tray {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.draggable-component {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    cursor: grab;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.draggable-component:hover {
+    border-color: var(--cyan);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 14px var(--cyan-glow);
+}
+
+.draggable-component:active {
+    cursor: grabbing;
+}
+
+.draggable-component.used {
+    opacity: 0.35;
+    pointer-events: none;
+    filter: grayscale(1);
+}
+
+.drag-icon {
+    font-size: 26px;
+    margin-bottom: 4px;
+}
+
+.drag-info strong {
+    display: block;
+    font-size: 0.82rem;
+    color: var(--text);
+}
+
+.drag-info small {
+    font-size: 0.68rem;
+    color: var(--muted);
+    font-family: monospace, sans-serif;
+}
+
+.drag-action-pill {
+    display: inline-block;
+    margin-top: 6px;
+    background: var(--badge-bg);
+    color: var(--cyan);
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 6px;
+}
+
+.circuit-success-box {
+    margin-top: 14px;
+    padding: 14px 16px;
+    background: rgba(84, 230, 165, 0.12);
+    border: 1px solid var(--green);
+    border-radius: 12px;
+    font-size: 0.88rem;
+    color: var(--text);
+    line-height: 1.5;
+}
+
+/* RESPONSIVE PARA EL TABLERO DE CIRCUITOS */
+@media (max-width: 600px) {
+    .circuit-board {
+        height: 280px;
+    }
+
+    .slot-bateria {
+        left: 10px;
+        width: 110px;
+    }
+
+    .slot-resistencia {
+        top: 10px;
+        width: 140px;
+    }
+
+    .slot-switch {
+        bottom: 10px;
+        width: 130px;
+    }
+
+    .wire-top, .wire-bottom {
+        left: 70px;
+        right: 70px;
+    }
+
+    .wire-left, .wire-right {
+        top: 40px;
+        bottom: 40px;
+    }
+
+    .digital-multimeter {
+        right: 10px;
+        width: 105px;
+        padding: 6px 8px;
+    }
+
+    .meter-value {
+        font-size: 1rem;
+    }
+
+    .components-tray {
+        grid-template-columns: 1fr;
+    }
+
+    .circuit-specs-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+
